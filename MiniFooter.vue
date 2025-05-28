@@ -18,8 +18,8 @@
     email: {type: [String], default: "ciao@uwa.agency"},
     address: {type: [String], default: "Via Sant'Andrea Apostolo 32"},
     addressTwo: {type: [String], default: "28100, Novara [NO], Italy"},
-    TaxNumber: {type: [String], default: "0123456789"},
-    idCode: {type: [String], default: "0123456789"},
+    TaxNumber: {type: [String]},
+    idCode: {type: [String]},
   })
 </script>
 

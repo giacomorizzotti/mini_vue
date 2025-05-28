@@ -46,7 +46,7 @@
   }
 
   const boxClass = computed(() => {
-    const classes = ['btn']
+    const classes = []
 
     // Size
     const sizeClass = props.size && sizeClassMap[props.size] ? 'box-'+sizeClassMap[props.size] : 'box'

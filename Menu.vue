@@ -71,16 +71,16 @@ nav.menu {
     li.item, li.menu-item {
       display: block;
       font-weight: 700;
-      font-size: var(--h5);
+      font-size: var(--h6);
       line-height: 1.5;
       margin:0;
       background: transparent;
       padding:0;
       @media only screen and (min-width: 576px) {
-        font-size: var(--h4);
+        font-size: var(--h5);
       }
       @media only screen and (min-width: 768px) {
-        font-size: var(--h6);
+        font-size: var(--p);
         padding: calc(var(--padding)*.5) calc(var(--padding)*.75);
       }
       a {

@@ -83,7 +83,9 @@ header#header {
     width: 100%;
   }
   &.open-menu {
-    background-color: var(--sheet-color);
+    &.scrolled {
+      background-color: var(--sheet-color);
+    }
     .header-logo {
       filter: brightness(0) invert(1);
     }

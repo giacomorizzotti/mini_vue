@@ -30,9 +30,9 @@
   width: 100%;
   margin: 0 auto;
   position: relative;
-  max-width: calc( var(--max-screen) * 0.75 );
-  @media only screen and (min-width:1920px) {
-    max-width: calc( var(--max-screen) * 1 );
+  max-width: calc(var(--max-screen) * 0.75);
+  @media only screen and (min-width: 992px) {
+    max-width: calc(var(--max-screen) * 1);
   }
   &.fw, &.full-width {
     min-width: 100%;
@@ -43,19 +43,19 @@
       width: 100vw;
       max-width: 100vw;
       left: 50%;
-      transform: translate(calc(-50%), 0);
+      transform: translate(-50%, 0);
     }
   }
   &.thin {
-    max-width: calc( var(--max-screen) * 0.5 );
-    @media only screen and (min-width:1920px) {
-      max-width: calc( var(--max-screen) * 0.75 );
+    max-width: calc(var(--max-screen) * 0.5);
+    @media only screen and (min-width: 992px) {
+      max-width: calc(var(--max-screen) * 0.75);
     }
   }
   &.wide {
-    max-width: calc( var(--max-screen) * 1 );
-    @media only screen and (min-width:1920px) {
-      max-width: calc( var(--max-screen) * 1.25 );
+    max-width: calc(var(--max-screen) * 1);
+    @media only screen and (min-width: 992px) {
+      max-width: calc(var(--max-screen) * 1.25);
     }
   }
 }
