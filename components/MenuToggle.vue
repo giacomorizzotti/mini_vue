@@ -1,7 +1,5 @@
 <script setup>
-import { ref } from 'vue'
-
-import { menuState } from '@/composables/menuState'
+import { menuState } from '@/mini/composables/menuState'
 const { isMenuOpen } = menuState()
 const toggleMenu = () => {
   if (isMenuOpen.value == false) window.scrollTo(0,0);

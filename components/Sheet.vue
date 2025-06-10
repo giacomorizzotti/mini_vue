@@ -1,16 +1,13 @@
 <script setup>
 import { computed } from 'vue'
-import { menuState } from '@/composables/menuState'
-const { isMenuOpen } = menuState()
-import { useScroll } from '@vueuse/core'
-const scroll = useScroll(window)
+import { getMenuStateClass } from '@/mini/composables/menuState'
+import { getScrollClass } from '@/mini/composables/scrollState'
+
+const scrollClass = getScrollClass()
 
 const sheetClasses = computed(() => {
-  const classes = []
-  // Scroll
-  scroll.arrivedState.top ? classes.push('top') : classes.push('scrolled')
-  // Menu open
-  if (isMenuOpen.value == true) classes.push('open-menu')
+  const menuStateClass = getMenuStateClass()
+  const classes = [ scrollClass.value, menuStateClass.value ]
   return classes
 })
 

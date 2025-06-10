@@ -1,10 +1,19 @@
 <script setup>
-import { menuState } from '@/composables/menuState'
-const { isMenuOpen } = menuState()    
+import { computed } from 'vue'
+import { getMenuStateClass } from '@/mini/composables/menuState'
+import { getScrollClass } from '@/mini/composables/scrollState'
+
+const scrollClass = getScrollClass()
+
+const mainClasses = computed(() => {
+  const menuStateClass = getMenuStateClass()
+  const classes = [ scrollClass.value, menuStateClass.value ]
+  return classes
+})
 </script>
 
 <template>
-  <main :class="{ 'open-menu': isMenuOpen }">
+  <main :class="mainClasses">
     <slot />
   </main>
 </template>

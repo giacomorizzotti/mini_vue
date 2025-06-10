@@ -1,15 +1,14 @@
 <script setup>
 import { computed } from 'vue'
-import { useScroll } from '@vueuse/core'
-const scroll = useScroll(window)
 import { NavArrowUp } from '@iconoir/vue';
+import { getScrollClass } from '@/mini/composables/scrollState'
+const scrollClass = getScrollClass()
 
 const topLinkClasses = computed(() => {
-  const classes = []
-  // Scroll
-  scroll.arrivedState.top ? classes.push('top') : classes.push('scrolled')
+  const classes = [ scrollClass.value ]
   return classes
 })
+
 </script>
 
 <template>

@@ -1,7 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { menuState } from '@/composables/menuState'
-const { isMenuOpen } = menuState()
+import { menuState, getMenuStateClass } from '@/mini/composables/menuState'
 const props = defineProps({
   menuItems: {
     type: [Array],
@@ -27,9 +26,17 @@ const directionClass = computed(() => {
   }
   return classes
 })
+const menuClass = computed(() => {
+  const menuStateClass = getMenuStateClass()
+  const classes = [menuStateClass.value]
+  return classes
+})
 
+
+const { isMenuOpen } = menuState()
 const toggleMenu = () => {
   if (props.menuToggleOnClick === true) {
+    console.log('ciaooo')
     if (isMenuOpen.value == false) window.scrollTo(0,0);
     isMenuOpen.value = !isMenuOpen.value
   }
@@ -38,7 +45,7 @@ const toggleMenu = () => {
 </script>
 
 <template>
-  <nav class="menu" :class="{ 'open-menu': isMenuOpen }">
+  <nav class="menu" :class="menuClass">
     <ul class="menu" :class="directionClass">
       <li v-for="item in menuItems" class="item">
         <router-link 

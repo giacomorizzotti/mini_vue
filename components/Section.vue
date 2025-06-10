@@ -1,28 +1,27 @@
 <script setup>
   import { computed } from 'vue'
   const props = defineProps({
-    width: {
-      type: [Number, String],
-      default: null
+    title: {
+      type: [Number,String],
+      default: "section title"
+    },
+    pageMenu: {
+      type: [Boolean],
     }
   })
-  const containerClass = computed(() => {
-    const classes = ['container']
-    if (props.width === 'fw' || props.width === 'full-width') {
-      classes.push('fw')
-    } else if (props.width === 'thin') {
-      classes.push('thin')
-    } else if (props.width === 'wide') {
-      classes.push('wide')
+  const sectionClass = computed(() => {
+    const classes = ['container', 'fw']
+    if (props.pageMenu) {
+      classes.push('page-menu')
     }
     return classes
   })
 </script>
 
 <template>
-  <div :class="containerClass">
+  <section :id="props.title.replace(/\s+/g, '-').toLowerCase()":class="sectionClass" :title="props.title">
     <slot />
-  </div>
+  </section>
 </template>
 
 <style lang="scss" scoped>

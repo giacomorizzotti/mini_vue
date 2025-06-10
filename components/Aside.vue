@@ -1,26 +1,35 @@
 <script setup>
   import { computed } from 'vue'
-  import { menuState } from '@/composables/menuState'
-  const { isMenuOpen } = menuState()  
+  import { getMenuStateClass } from '@/mini/composables/menuState'
+  import { getScrollClass } from '@/mini/composables/scrollState'
+
   const props = defineProps({
     side: {
       type: [Number, String],
       default: null
     }
   })
+
   const asideId = computed(() => {
-  const id = []
-  if (props.side === 'left' || props.side === 'l') {
-    id.push('side-left')
-  } else if (props.side === 'right' || props.side === 'r') {
-    id.push('side-right')
-  }
+    const id = []
+    if (props.side === 'left' || props.side === 'l') {
+      id.push('side-left')
+    } else if (props.side === 'right' || props.side === 'r') {
+      id.push('side-right')
+    }
   return id
-})
+  })
+
+  const scrollClass = getScrollClass()
+  const asideClasses = computed(() => {
+    const menuStateClass = getMenuStateClass()
+    const classes = [scrollClass.value, menuStateClass.value]
+    return classes
+  })
 </script>
 
 <template>
-  <aside :id="asideId" :class="{ 'open-menu': isMenuOpen }">
+  <aside :id="asideId" :class="asideClasses">
     <slot />
   </aside>
 </template>
