@@ -1,17 +1,13 @@
 <script setup>
-import { menuState } from '@/mini/composables/menuState'
-const { isMenuOpen } = menuState()
-const toggleMenu = () => {
-  if (isMenuOpen.value == false) window.scrollTo(0,0);
-  isMenuOpen.value = !isMenuOpen.value
-}
+import { useMenuState } from '@/mini/composables/useMenuState'
+const { isMenuOpen, menuToggle } = useMenuState()
 </script>
 
 <template>
   <div
     id="menu-toggle"
     :class="{ clicked: isMenuOpen }"
-    @click="toggleMenu"
+    @click="menuToggle"
   >
     <div class="line"></div>
     <div class="line"></div>

@@ -1,5 +1,5 @@
 <script setup>
-import { useMessage } from '@/mini/composables/message'
+import { useMessage } from '@/mini/composables/useMessage'
 import Section from '@/mini/components/Section.vue';
 import Container from '@/mini/components/Container.vue';
 import Boxes from '@/mini/components/Boxes.vue';
@@ -10,9 +10,9 @@ const { messages } = useMessage()
 <template>
   <Section id="message-box">
     <Container fw>
-      <Container>
-        <Boxes class="justify-content-center">
-          <Box :size="66" v-for="msg in messages" :key="msg.id" class="message b-rad-10 box-shadow-dark" :background="msg.type">
+      <Container width="thin">
+        <Boxes class="center flex-direction-column">
+          <Box v-for="msg in messages" :key="msg.id" class="message b-rad-10 box-shadow-dark" :background="msg.type">
             <p>{{ msg.text }}</p>
           </Box>
         </Boxes>

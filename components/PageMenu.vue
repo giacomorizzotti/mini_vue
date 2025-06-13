@@ -1,10 +1,10 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
-import { getMenuStateClass } from '@/mini/composables/menuState'
-import { getScrollClass } from '@/mini/composables/scrollState'
-
-const scrollClass = getScrollClass()
+import { useMenuState } from '@/mini/composables/useMenuState'
+const { menuStateClass } = useMenuState()
+import { useScrollState } from '@/mini/composables/useScrollState'
+const { scrollClass } = useScrollState()
 
 const props = defineProps({
   menuToggleOnClick: {
@@ -30,7 +30,6 @@ const directionClass = computed(() => {
 })
 
 const menuClass = computed(() => {
-  const menuStateClass = getMenuStateClass()
   const classes = [ scrollClass.value, menuStateClass.value ]
   if (props.invert === true) classes.push("invert")
   if (props.invert === 'top') classes.push("invert-top")
@@ -89,14 +88,12 @@ onMounted(() => {
   }, 0)
 })
 
-watch(
-  () => {
-    setTimeout(() => {
-      updateMenuItems()
-      observeSections()
-    }, 0)
-  }
-)
+watchEffect(() => {
+  setTimeout(() => {
+    updateMenuItems()
+    observeSections()
+  }, 0)
+})
 </script>
 
 <template>

@@ -1,12 +1,11 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { menuState, getMenuStateClass } from '@/mini/composables/menuState'
+import { useMenuState } from '@/mini/composables/useMenuState'
+const { menuStateClass, menuToggle } = useMenuState()
 const props = defineProps({
   menuItems: {
     type: [Array],
-    default: [
-      {title:'home', routeName:'home', target:null},
-    ]
+    default: null
   },
   menuToggleOnClick: {
     type: [Boolean],
@@ -22,39 +21,24 @@ const directionClass = computed(() => {
   if (props.direction === 'row') {
     classes.push('row')
   } else {
-    classes.push('wide')
+    classes.push('column')
   }
   return classes
 })
-const menuClass = computed(() => {
-  const menuStateClass = getMenuStateClass()
-  const classes = [menuStateClass.value]
-  return classes
-})
-
-
-const { isMenuOpen } = menuState()
-const toggleMenu = () => {
-  if (props.menuToggleOnClick === true) {
-    console.log('ciaooo')
-    if (isMenuOpen.value == false) window.scrollTo(0,0);
-    isMenuOpen.value = !isMenuOpen.value
-  }
-}
-
 </script>
 
 <template>
-  <nav class="menu" :class="menuClass">
+  <nav class="menu" :class="menuStateClass">
     <ul class="menu" :class="directionClass">
-      <li v-for="item in menuItems" class="item">
+      <li v-if="menuItems" v-for="item in menuItems" class="item">
         <router-link 
           :to="{ name: item.routeName }"
           :href="item.link"
           :target="item.target" 
-          @click="toggleMenu"
+          @click="menuToggle"
         >{{ item.title }}</router-link>
       </li>
+      <slot v-else/>
     </ul>
   </nav>
 </template>
@@ -75,7 +59,7 @@ nav.menu {
     &.row {
       flex-flow: row wrap;
     }
-    li.item, li.menu-item {
+    li.item {
       display: block;
       font-weight: 700;
       font-size: var(--h6);

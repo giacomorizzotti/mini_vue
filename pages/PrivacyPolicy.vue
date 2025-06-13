@@ -1,7 +1,7 @@
 <script setup>
 
 import { ref, onMounted } from 'vue'
-import { useMessage } from '@/mini/composables/message'
+import { useMessage } from '@/mini/composables/useMessage'
 import Container from '@/mini/components/Container.vue'
 import Boxes from '@/mini/components/Boxes.vue'
 import Box from '@/mini/components/Box.vue'

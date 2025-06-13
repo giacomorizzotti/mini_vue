@@ -1,19 +1,12 @@
 <script setup>
-import { computed } from 'vue'
-import { getMenuStateClass } from '@/mini/composables/menuState'
-import { getScrollClass } from '@/mini/composables/scrollState'
-
-const scrollClass = getScrollClass()
-
-const mainClasses = computed(() => {
-  const menuStateClass = getMenuStateClass()
-  const classes = [ scrollClass.value, menuStateClass.value ]
-  return classes
-})
+import { useMenuState } from '@/mini/composables/useMenuState'
+const { menuStateClass } = useMenuState()
+import { useScrollState } from '@/mini/composables/useScrollState'
+const { scrollClass } = useScrollState()
 </script>
 
 <template>
-  <main :class="mainClasses">
+  <main :class="[ scrollClass, menuStateClass ]">
     <slot />
   </main>
 </template>

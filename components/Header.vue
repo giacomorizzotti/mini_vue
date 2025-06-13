@@ -1,7 +1,9 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { getMenuStateClass } from '@/mini/composables/menuState'
-import { getScrollClass } from '@/mini/composables/scrollState'
+import { useMenuState } from '@/mini/composables/useMenuState'
+const { menuStateClass } = useMenuState()
+import { useScrollState } from '@/mini/composables/useScrollState'
+const { scrollClass } = useScrollState()
 
 const props = defineProps({
   fixed: {
@@ -14,11 +16,8 @@ const props = defineProps({
   },
 })
 
-const scrollClass = getScrollClass()
-
 const headerClasses = computed(() => {
-  const menuStateClass = getMenuStateClass()
-  const classes = [ scrollClass.value, menuStateClass.value ]
+  const classes = [menuStateClass.value, scrollClass.value]
   if (props.fixed === true) classes.push("fixed")
   if (props.invert === true) classes.push("invert")
   if (props.invert === 'top') classes.push("invert-top")

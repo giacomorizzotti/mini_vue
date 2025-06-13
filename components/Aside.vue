@@ -1,7 +1,9 @@
 <script setup>
   import { computed } from 'vue'
-  import { getMenuStateClass } from '@/mini/composables/menuState'
-  import { getScrollClass } from '@/mini/composables/scrollState'
+  import { useMenuState } from '@/mini/composables/useMenuState'
+  const { menuStateClass } = useMenuState()
+  import { useScrollState } from '@/mini/composables/useScrollState'
+  const { scrollClass } = useScrollState()
 
   const props = defineProps({
     side: {
@@ -20,16 +22,10 @@
   return id
   })
 
-  const scrollClass = getScrollClass()
-  const asideClasses = computed(() => {
-    const menuStateClass = getMenuStateClass()
-    const classes = [scrollClass.value, menuStateClass.value]
-    return classes
-  })
 </script>
 
 <template>
-  <aside :id="asideId" :class="asideClasses">
+  <aside :id="asideId" :class="[scrollClass, menuStateClass]">
     <slot />
   </aside>
 </template>

@@ -12,10 +12,13 @@
     TaxNumber: {type: [String]},
     idCode: {type: [String]},
   })
+  
+  const currentYear = new Date().getFullYear()
+  
 </script>
 
 <template>
-  <p class="">&nbsp;©&nbsp;<span class="bold">{{ props.company }}</span></p>
+  <p class="">{{ currentYear }}&nbsp;©&nbsp;<span class="bold">{{ props.company }}</span></p>
   <p v-if="props.address" class="S mb-0">{{ props.address }}</p>
   <p v-if="props.addressTwo" class="S mt-0">{{ props.addressTwo }}</p>
   <p v-if="props.email" class="S mb-0"><span class="label">email:</span> <b>{{ props.email }}</b></p>
