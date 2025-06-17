@@ -43,6 +43,11 @@ header#header {
   left: 0;
   z-index: 99;
   transition: background-color 0.2s ease-out;
+  &.open-menu {
+    position: relative;
+    flex-basis: 100%;
+    background-color: var(--sheet-color);
+  }
 }
 </style>
 <style lang="scss">

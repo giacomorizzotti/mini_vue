@@ -29,8 +29,5 @@ const { scrollClass } = useScrollState()
     justify-content: flex-end;
     align-items: stretch;
   }
-  &.open-menu {
-    padding-top: calc((var(--menu-toggle-height)) + var(--margin) * 2 );
-  }
 }
 </style>

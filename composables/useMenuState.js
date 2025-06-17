@@ -8,10 +8,14 @@ export function useMenuState() {
   function menuOpen() {
     isMenuOpen.value = true
     menuStateClass.value = 'open-menu' 
+    document.body.classList.remove('closed-menu');
+    document.body.classList.add(menuStateClass.value);
   }
   function menuClose() {
     isMenuOpen.value = false
     menuStateClass.value = 'closed-menu'
+    document.body.classList.remove('open-menu');
+    document.body.classList.add(menuStateClass.value);
   }
 
   function menuToggle() {
