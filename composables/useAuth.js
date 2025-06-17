@@ -4,12 +4,13 @@ import { useMessage } from '@/mini/composables/useMessage'
 const { showMessage }= useMessage()
 import { useRouter } from 'vue-router'
 
-export function useAuth(getTokenEndpoint, verifyTokenEndpoint) {
-
+export function useAuth(getTokenEndpoint, verifyTokenEndpoint, userInfoEndpoint) {
+    
     const router = useRouter()
     const accessToken = ref(localStorage.getItem('accessToken'))
     const refreshToken = ref(localStorage.getItem('refreshToken'))
     const isAuthenticated = ref(false)
+    const userInfo = ref(null)
 
     async function resourceOwnerPasswordBased(username, password, clientId, clientSecret) {
         try {
@@ -35,7 +36,7 @@ export function useAuth(getTokenEndpoint, verifyTokenEndpoint) {
             isAuthenticated.value=true
             // Redirect or update UI
             showMessage('Login eseguito con successo', 'success')
-            router.push('/')
+            //router.push('/')
             //console.log(response.data)
             return response.data
         } catch (e) {
@@ -58,12 +59,29 @@ export function useAuth(getTokenEndpoint, verifyTokenEndpoint) {
             isAuthenticated.value=true
             // Redirect or update UI
             showMessage('Login eseguito con successo', 'success')
-            router.push('/')
+            //router.push('/')
             return response.data
         } catch (e) {
             showMessage('Login non riuscito', "warning")
             //console.log(e)
             return false
+        }
+    }
+
+    async function fetchUserInfo() {
+        try {
+            const { data } = await axios.get(userInfoEndpoint, {
+                headers: {
+                    Authorization: `Bearer ${accessToken.value}`
+                }
+            })
+            userInfo.value = data
+            localStorage.setItem('userInfo', JSON.stringify(data))
+            return data
+        } catch (e) {
+            userInfo.value = null
+            //console.log(e)
+            return null
         }
     }
 
@@ -102,11 +120,12 @@ export function useAuth(getTokenEndpoint, verifyTokenEndpoint) {
         localStorage.removeItem('accessToken')
         localStorage.removeItem('refreshToken')
         localStorage.removeItem('isAuthenticated')
+        localStorage.removeItem('userInfo')
         isAuthenticated.value = false
         showMessage('Logout eseguito con successo', 'success')
         router.push('/')
         return true
     }
 
-    return { basicAuth, resourceOwnerPasswordBased, isAuthenticated, checkAccess, verifyToken, deepVerifyToken, clearLocalStorage }
+    return { basicAuth, resourceOwnerPasswordBased, isAuthenticated, fetchUserInfo, userInfo, checkAccess, verifyToken, deepVerifyToken, clearLocalStorage }
 }

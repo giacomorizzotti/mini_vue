@@ -14,16 +14,18 @@
 
 <style lang="scss" scoped>
   img.logo {
-    width: 66.666666%;
-    height: auto;
-    display: block;
-    filter: grayscale(100%);
-    opacity: 0.1;
-    transition: all 0.3s ease;
-    margin: 0 auto;
-    &:hover {
-      filter: grayscale(0);
-      opacity:1;
+    &.emblem {
+      width: 66.666666%;
+      height: auto;
+      display: block;
+      filter: grayscale(100%);
+      opacity: 0.1;
+      transition: all 0.3s ease;
+      margin: 0 auto;
+      &:hover {
+        filter: grayscale(0);
+        opacity:1;
+      }
     }
   }
 </style>

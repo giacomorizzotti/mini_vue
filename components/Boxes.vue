@@ -79,21 +79,11 @@
 <style lang="scss" scoped>
 .boxes {
   display: flex;
-  flex-flow: row wrap;
   position: relative;
+  flex-flow: row wrap;
   --gap: calc(var(--basic-gap) * 1);
   --gap-y: calc(var(--gap) * 1);
   --gap-x: calc(var(--gap) * 1);
   gap: var(--gap-y) var(--gap-x);
-}
-// Gap
-$multiplier: "0" 0, "05" 0.5, "1" 1, "15" 1.5, "2" 2, "3" 3, "4" 4, "5" 5, "10" 10, "20" 20;
-.g {
-  --gap: calc( var(--basic-gap) * 1 );
-  @each $gap-label, $gap in $multiplier {
-    &-#{$gap-label} {
-      --gap: calc( var(--basic-gap) * #{$gap} );
-    }
-  }
 }
 </style>

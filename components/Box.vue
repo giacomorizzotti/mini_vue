@@ -88,7 +88,8 @@
   </div>
 </template>
 
-<style lang="scss" scoped>// FLEXBOXES
+<style lang="scss" scoped>
+// box
 
 $box-widths: (
   "8":   (100%, 50%, 33.333333%, 16.666666%, 8.333333%),
@@ -110,7 +111,6 @@ $box-widths: (
   "90":  (100%, 100%, 80%, 80%, 90%),
   "100": (100%, 100%, 100%, 100%, 100%),
 );
-
 $breakpoints: (
   "zero": 0,
   "sm": 576px,

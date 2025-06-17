@@ -68,6 +68,7 @@
 </template>
 
 <style lang="scss" scoped>
+// container
 .container {
   width: 100%;
   margin: 0 auto;

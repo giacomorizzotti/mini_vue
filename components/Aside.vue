@@ -31,37 +31,65 @@
 </template>
 
 <style lang="scss" scoped>
-  aside {
-    transition: flex 0.2s ease-out, opacity 0.2s ease-out, padding 0.2s ease-out;
-    flex: 0 0 0;
-    overflow: hidden;
-    &.open-menu {
-      padding: calc( var(--padding) * 1 );
-      flex: 10;
-      @media only screen and (min-width: 576px) {
-        flex: 3;
-      }
-      @media only screen and (min-width: 768px) {
-        flex: 2.5;
-      }
-      @media only screen and (min-width: 1200px) {
-        flex: 2;
-      }
-      @media only screen and (min-width: 1920px) {
-        flex: 1.5;
-      }
-    }
+// aside
+aside#side-right, aside#side-left {
+  transition: flex 0.2s ease-out;
+  flex: 0 0 0;
+  overflow: hidden;
+}
+aside#side-right {
+  order: 2;
+  @media only screen and (min-width: 992px) {
+    order: 3;
   }
-  aside#side-right {
-    order: 2;
-    @media only screen and (min-width: 992px) {
-      order: 3;
-    }
-  }
-  aside#side-left {
+}
+aside#side-left {
+  transition: padding 0.2s ease, flex 0.2s ease-out;
+  order: 1;
+  @media only screen and (min-width: 992px) {
     order: 1;
-    @media only screen and (min-width: 992px) {
-      order: 1;
+  }
+}
+aside#side-right.open-menu, aside#side-left.open-menu {
+  flex: 10;
+  @media only screen and (min-width: 576px) {
+    flex: 3;
+  }
+  @media only screen and (min-width: 768px) {
+    flex: 2.5;
+  }
+  @media only screen and (min-width: 1400px) {
+    flex: 2;
+  }
+  @media only screen and (min-width: 1920px) {
+    flex: 2;
+  }
+}
+</style>
+<style lang="scss">
+body.open-menu {
+  aside#side-left.open-menu {
+    padding-top: calc((var(--logo-height)) + var(--margin) * 2 + var(--padding) * 2 + var(--padding) * 2);
+  }
+  #sheet.open-menu {
+    aside#side-left.open-menu {
+      padding-top: var(--padding);
     }
   }
+  aside#side-right.open-menu, aside#side-left.open-menu {
+    flex: 10;
+    @media only screen and (min-width: 576px) {
+      flex: 3;
+    }
+    @media only screen and (min-width: 768px) {
+      flex: 2.5;
+    }
+    @media only screen and (min-width: 1400px) {
+      flex: 2;
+    }
+    @media only screen and (min-width: 1920px) {
+      flex: 1.5;
+    }
+  }
+}
 </style>

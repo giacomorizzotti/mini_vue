@@ -55,34 +55,98 @@ const headerBrandClasses = computed(() => {
 </template>
 
 <style lang="scss" scoped>
-#brand a {
-  display: flex;
-  align-items: center;
-  height: 100%;
-}
-.open-menu {
-  &.scrolled {
-    background-color: var(--sheet-color);
+// brand
+header#header {
+  #brand, .brand {
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+    min-height: calc( (var(--padding) * 2 ) + var(--logo-height) );
+    a {
+      display: inline-block;
+      .logo, .header-logo {
+        transition: all 0.3s ease;
+        min-height: var(--logo-height);
+        height: var(--logo-height);
+        width: auto;
+      }
+    }
+    .site-title {
+      display: inline-block;
+      margin: 0 var(--margin) 0 0;
+      position: relative;
+      line-height: 1!important;
+    }
   }
-  .header-logo {
-    filter: brightness(0) invert(1);
+}
+</style>
+
+<style lang="scss">
+body.top {
+  header#header {
+    &.neg, &.inv, &.top-neg, &.top-inv, &.top-bk, &.top-col {
+      #brand, .brand {
+        color: var(--white);
+        a {
+          .logo, .header-logo {
+            filter: brightness(0) invert(1);
+          }
+          .site-title {
+            color: var(--white);
+          }
+        }
+        .site-description {
+          color: var(--white);
+        }
+      }
+    }
   }
-  .site-title {
-    color: var(--white);
+  .open-menu {
+    header#header {
+      &.neg, &.inv, &.top-neg, &.top-inv, &.scroll-neg, &.scroll-inv {
+        background: var(--transp);
+      }
+    }
+    #brand, .brand {
+      img.logo {
+        filter: brightness(0) invert(1);
+      }
+      .site-title, .header-logo {
+        color:var(--white);
+      }
+      .site-description {
+        color: var(--white);
+      }
+    }
   }
 }
-.header-logo {
-  transition: filter 0.2s ease-out;
-  height: var(--logo-height);
-  width: auto;
-}
-.site-title {
-  transition: color 0.2s ease-out;
-  margin: 0;
-}
-.invert {
-  .header-logo {
-    filter: brightness(0) invert(1);
+body.scroll, body.scrolled {
+  header#header {
+    #brand, .brand {
+      min-height: calc( (var(--padding) * 2 ) + var(--scroll-logo-height) );
+      a {
+        .logo, .header-logo {
+          min-height: var(--scroll-logo-height);
+          height: var(--scroll-logo-height);
+        }
+      }
+    }
+    &.neg, &.inv, &.scroll-neg, &.scroll-inv, &.scroll-bk, &.scroll-col {
+      #brand, .brand {
+        color: var(--white);
+        a {
+          .logo, .header-logo {
+            filter: brightness(0) invert(1);
+          }
+          .site-title {
+            color: var(--white);
+          }
+        }
+        .site-description {
+          color: var(--white);
+        }
+      }
+    }
   }
 }
 </style>

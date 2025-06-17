@@ -34,16 +34,45 @@ const headerClasses = computed(() => {
 </template>
 
 <style lang="scss" scoped>
+// header
 header#header {
-  transition: background-color 0.15s ease-out;
-  &.fixed {
-    position: fixed;
-    z-index:99;
-    width: 100%;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 99;
+  transition: background-color 0.2s ease-out;
+}
+</style>
+<style lang="scss">
+body.top {
+  header#header {
+    &.top {
+      &-wh {
+        background: var(--white);
+      }
+      &-bk {
+        background: var(--black);
+      }
+      &-col {
+        background: var(--main-color);
+      }
+    }
   }
-  &.open-menu {
-    &.scrolled {
-      background-color: var(--sheet-color);
+}
+body.scroll, body.scrolled {
+  header#header {
+    &.scroll {
+      &-wh {
+        background: var(--white);
+      }
+      &-bk {
+        background: var(--black);
+      }
+      &-col {
+        background: var(--main-color);
+      }
     }
   }
 }

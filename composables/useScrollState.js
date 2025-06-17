@@ -12,3 +12,15 @@ export function useScrollState() {
   const scrollClass = computed(() => (isScrolled.value ? 'scrolled' : 'top'))
   return { scrollClass }
 }
+
+function updateBodyScrollClass() {
+  if (window.scrollY > 0) {
+    document.body.classList.add('scrolled');
+    document.body.classList.remove('top');
+  } else {
+    document.body.classList.add('top');
+    document.body.classList.remove('scrolled');
+  }
+}
+window.addEventListener('scroll', updateBodyScrollClass);
+window.addEventListener('DOMContentLoaded', updateBodyScrollClass);

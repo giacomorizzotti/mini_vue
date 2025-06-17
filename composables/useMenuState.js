@@ -5,16 +5,28 @@ const menuStateClass = ref('closed-menu')
 
 export function useMenuState() {
 
+  function menuOpen() {
+    isMenuOpen.value = true
+    menuStateClass.value = 'open-menu' 
+  }
+  function menuClose() {
+    isMenuOpen.value = false
+    menuStateClass.value = 'closed-menu'
+  }
+
   function menuToggle() {
     isMenuOpen.value = !isMenuOpen.value
     if ( isMenuOpen.value == true ) { 
       menuStateClass.value = 'open-menu' 
+      document.body.classList.remove('closed-menu');
+      document.body.classList.add(menuStateClass.value);
     } else {
-      window.scrollTo(0,0)
       menuStateClass.value = 'closed-menu'
+      document.body.classList.remove('open-menu');
+      document.body.classList.add(menuStateClass.value);
     }
   }
   
-  return { isMenuOpen, menuStateClass, menuToggle }
+  return { isMenuOpen, menuStateClass, menuOpen, menuClose, menuToggle }
   
 }

@@ -1,15 +1,15 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useMenuState } from '@/mini/composables/useMenuState'
-const { menuStateClass, menuToggle } = useMenuState()
+const { menuStateClass, menuClose } = useMenuState()
 const props = defineProps({
   menuItems: {
     type: [Array],
     default: null
   },
-  menuToggleOnClick: {
+  menuCloseOnClick: {
     type: [Boolean],
-    default: true
+    default: false
   },
   direction: {
     type: [String],
@@ -25,6 +25,14 @@ const directionClass = computed(() => {
   }
   return classes
 })
+
+const processedMenuClose = () => {
+  window.scrollTo(0,0)
+  if (props.menuCloseOnClick === true) {
+    menuClose()
+  }
+}
+
 </script>
 
 <template>
@@ -35,7 +43,7 @@ const directionClass = computed(() => {
           :to="{ name: item.routeName }"
           :href="item.link"
           :target="item.target" 
-          @click="menuToggle"
+          @click="processedMenuClose"
         >{{ item.title }}</router-link>
       </li>
       <slot v-else/>
@@ -59,7 +67,7 @@ nav.menu {
     &.row {
       flex-flow: row wrap;
     }
-    li.item {
+    li.item, li.menu-item {
       display: block;
       font-weight: 700;
       font-size: var(--h6);
