@@ -5,7 +5,7 @@ import Box from '@/mini/components/Box.vue';
 
 const username = ref('')
 const password = ref('')
-import { useAuth } from '@/mini/composables/useAuth.js'
+import { useAuth } from '@/mini/stores/auth.js'
 const { isAuthenticated, resourceOwnerPasswordBased } = useAuth('http://127.0.0.1:8000/o/token/', 'http://127.0.0.1:8000/o/introspect/')
 
 function login() {
