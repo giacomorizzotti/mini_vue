@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 
-const modalVisibility = ref(true)
+const modalVisibility = ref(false)
 const modalClass = ref('hidden')
 
 export function useModal() {

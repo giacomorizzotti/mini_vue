@@ -17,11 +17,15 @@ export const useAuthStore = defineStore('auth', () => {
     const userRoles = computed(() => userInfo.value?.groups?.map(g => g.name) || [])
     const userGroups = computed(() => userInfo.value?.groups?.map(g => g.name) || [])
 
-    function setTokens(access, refresh) {
-        accessToken.value = access
-        refreshToken.value = refresh
-        localStorage.setItem('accessToken', access)
-        localStorage.setItem('refreshToken', refresh)
+    function setTokens(access=null, refresh=null) {
+        if (access) {
+            accessToken.value = access
+            localStorage.setItem('accessToken', access)
+        }
+        if (refresh) {
+            refreshToken.value = refresh
+            localStorage.setItem('refreshToken', refresh)
+        }
     }
 
     function clearTokens() {
@@ -47,8 +51,7 @@ export const useAuthStore = defineStore('auth', () => {
     function clearUserGroups() {
         userGroups.value = null
         localStorage.removeItem('userGroups')
-    }
-    
+    }    
 
     function isTokenExpired(token) {
         if (!token) return true
@@ -67,7 +70,12 @@ export const useAuthStore = defineStore('auth', () => {
             const response = await axios.post(refreshEndpoint, {
                 refresh: refreshToken.value
             })
-            setTokens(response.data.access_token, refreshToken.value)
+            if (response.data.access) {
+                setTokens(response.data.access, response.data.refresh)
+            }
+            if (response.data.access_token && response.data.refresh_token) {
+                setTokens(response.data.access_token, response.data.refresh_token)
+            }
             return true
         } catch {
             logout()
@@ -95,7 +103,12 @@ export const useAuthStore = defineStore('auth', () => {
                     }
                 }
             )
-            setTokens(response.data.access_token, response.data.refresh_token)
+            if (response.data.access) {
+                setTokens(response.data.access, response.data.refresh)
+            }
+            if (response.data.access_token && response.data.refresh_token) {
+                setTokens(response.data.access_token, response.data.refresh_token)
+            }
             isAuthenticated.value = true
             localStorage.setItem('isAuthenticated', 'true')
             await fetchUserInfo(userInfoEndpoint)
@@ -113,7 +126,12 @@ export const useAuthStore = defineStore('auth', () => {
                 username,
                 password,
             })
-            setTokens(response.data.access_token, response.data.refresh_token)
+            if (response.data.access) {
+                setTokens(response.data.access, response.data.refresh)
+            }
+            if (response.data.access_token && response.data.refresh_token) {
+                setTokens(response.data.access_token, response.data.refresh_token)
+            }
             isAuthenticated.value = true
             localStorage.setItem('isAuthenticated', 'true')
             await fetchUserInfo(userInfoEndpoint)
@@ -201,6 +219,8 @@ export const useAuthStore = defineStore('auth', () => {
         userGroups,
         login, 
         resourceOwnerPasswordBased, 
+        refreshAccessToken,
+        ensureValidToken,
         logout,
         fetchUserInfo,
         verifyToken, 

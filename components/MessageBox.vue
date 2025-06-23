@@ -13,7 +13,7 @@ const { messages } = useMessage()
       <Container width="thin">
         <Boxes class="center flex-direction-column">
           <Box v-for="msg in messages" :key="msg.id" class="message b-rad-10 box-shadow-dark" :background="msg.type">
-            <p>{{ msg.text }}</p>
+            <p :class="msg.textColor+'-text'">{{ msg.text }}</p>
           </Box>
         </Boxes>
       </Container>
