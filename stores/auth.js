@@ -12,8 +12,7 @@ export const useAuthStore = defineStore('auth', () => {
     const refreshToken = ref(localStorage.getItem('refreshToken'))
     const isAuthenticated = ref(localStorage.getItem('isAuthenticated') === 'true')
     const userInfo = ref(JSON.parse(localStorage.getItem('userInfo') || 'null'))
-    
-    // Computed: extract roles/groups from userInfo
+    const userAuthorizations = ref(JSON.parse(localStorage.getItem('userAuthorizations') || 'null'))
     const userRoles = computed(() => userInfo.value?.groups?.map(g => g.name) || [])
     const userGroups = computed(() => userInfo.value?.groups?.map(g => g.name) || [])
 
@@ -51,7 +50,16 @@ export const useAuthStore = defineStore('auth', () => {
     function clearUserGroups() {
         userGroups.value = null
         localStorage.removeItem('userGroups')
-    }    
+    }
+
+    function setUserAuthorizations(authorizations) {
+        userAuthorizations.value = authorizations
+        localStorage.setItem('userAuthorizations', JSON.stringify(authorizations))
+    }
+    function clearUserAuthorizations() {
+        userAuthorizations.value = null
+        localStorage.removeItem('userAuthorizations')
+    }
 
     function isTokenExpired(token) {
         if (!token) return true
@@ -160,8 +168,11 @@ export const useAuthStore = defineStore('auth', () => {
             })
             setUserInfo(response.data)
             setUserGroups(response.data.groups)
+            setUserAuthorizations(response.data.authorizations)
         } catch (e) {
             clearUserInfo()
+            clearUserGroups
+            clearUserAuthorizations()
         }
     }
 
@@ -218,6 +229,7 @@ export const useAuthStore = defineStore('auth', () => {
         userInfo,
         userRoles,
         userGroups,
+        userAuthorizations,
         login, 
         resourceOwnerPasswordBased, 
         refreshAccessToken,

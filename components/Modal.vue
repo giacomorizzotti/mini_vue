@@ -4,7 +4,6 @@ import Container from '@/mini/components/Container.vue';
 import Boxes from '@/mini/components/Boxes.vue';
 import Box from '@/mini/components/Box.vue';
 import { XmarkCircle } from '@iconoir/vue'
-import { useModal } from '@/mini/composables/useModal.js';
 
 const props = defineProps({ visible: Boolean })
 const emit = defineEmits(['close', 'loaded'])
