@@ -2,13 +2,13 @@
   import { computed } from 'vue'
   const props = defineProps({
     title: {
-      type: [Number,String],
-      default: "section title"
+      type: [Number,String]
     },
     pageMenu: {
       type: [Boolean],
     }
   })
+
   const sectionClass = computed(() => {
     const classes = ['container', 'fw']
     if (props.pageMenu) {
@@ -19,7 +19,11 @@
 </script>
 
 <template>
-  <section :id="props.title.replace(/\s+/g, '-').toLowerCase()":class="sectionClass" :title="props.title">
+  <section
+    :id="props.title ? props.title.replace(/\s+/g, '-').toLowerCase() : undefined"
+    :class="sectionClass"
+    :title="props.title ? props.title : undefined"
+  >
     <slot />
   </section>
 </template>

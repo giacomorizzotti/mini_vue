@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
+import { RouterLink } from 'vue-router'
 import Boxes from '@/mini/components/Boxes.vue';
 import Box from '@/mini/components/Box.vue';
 import { useMenuState } from '@/mini/composables/useMenuState'
@@ -9,7 +10,7 @@ const { scrollClass } = useScrollState()
 
 const props = defineProps({
   logo: {
-    type: [String],
+    type: [null, String],
     default: 'https://mini.uwa.agency/img/brand/mini_emblem.svg'
   },
   title: {
@@ -39,16 +40,14 @@ const headerBrandClasses = computed(() => {
   <Box id="brand" :class="headerBrandClasses">
     <Boxes class="g-0 align-items-center">
       <Box>
-        <router-link :to="{ name: 'home' }" class="">
+        <RouterLink v-if="logo" :to="{ name: 'home' }" class="">
             <img :src="logo" class="header-logo" alt="logo"/>
-        </router-link>
+        </RouterLink>
       </Box>
       <Box>
-        <router-link :to="{ name: 'home' }" class="">
-          <h3 class="site-title">
-            {{ title }}
-          </h3>
-        </router-link>
+        <RouterLink :to="{ name: 'home' }" class="">
+          <h3 class="site-title" v-html="title"/>
+        </RouterLink>
       </Box>
     </Boxes>
   </Box>
@@ -101,15 +100,17 @@ body.top {
       }
     }
   }
-  .open-menu {
+  &.open-menu, .open-menu {
     header#header {
       &.neg, &.inv, &.top-neg, &.top-inv, &.scroll-neg, &.scroll-inv {
         background: var(--transp);
       }
     }
     #brand, .brand {
-      img.logo {
-        filter: brightness(0) invert(1);
+      img {
+        &.logo, &.header-logo {
+          filter: brightness(0) invert(1);
+        }
       }
       .site-title, .header-logo {
         color:var(--white);

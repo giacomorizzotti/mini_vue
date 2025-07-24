@@ -83,12 +83,13 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    async function resourceOwnerPasswordBased({username, password, clientId, clientSecret, getTokenEndpoint, userInfoEndpoint}) {
+    async function resourceOwnerPasswordBased({username, password, clientId, clientSecret, getTokenEndpoint, userInfoEndpoint, scope = 'openid read write introspection groups'}) {
         try {
             const params = new URLSearchParams()
             params.append('grant_type', 'password')
             params.append('username', username)
             params.append('password', password)
+            params.append('scope', scope)
 
             const response = await axios.post(
                 getTokenEndpoint, 
@@ -176,7 +177,7 @@ export const useAuthStore = defineStore('auth', () => {
         return true
     }
 
-    async function deepVerifyToken() {
+    async function deepVerifyToken(verifyTokenEndpoint) {
         if (!accessToken.value) {
             isAuthenticated.value = false
             return false

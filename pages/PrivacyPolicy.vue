@@ -12,7 +12,6 @@ const privacyHtml = ref('')
 onMounted(async () => {
   try {
     const response = await fetch('https://api.uwa.agency/privacy-policy/?owner=uwa')
-    console.log(response)
     privacyHtml.value = await response.text()
   } catch (error) {
     showMessage('Errore nel caricamento della privacy policy.', 'danger')

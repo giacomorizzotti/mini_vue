@@ -13,23 +13,23 @@ export function useMessage() {
   }
 
   function showInfoMessage(msg) {
-    showMessage(msg, type='info', textColor="white", duration = 3000);
+    showMessage(msg, 'info');
   }
 
   function showWarningMessage(msg) {
-    showMessage(msg, type='warning', textColor="white", duration = 3000);
+    showMessage(msg, 'warning');
   }
 
   function showSuccessMessage(msg) {
-    showMessage(msg, type='success', textColor="white", duration = 3000);
+    showMessage(msg, 'success');
   }
 
   function showDangerMessage(msg) {
-    showMessage(msg, type='danger', textColor="white", duration = 3000);
+    showMessage(msg, 'danger');
   }
 
   function showBadMessage(msg) {
-    showMessage(msg, type='bad', textColor="white", duration = 5000);
+    showMessage(msg, 'bad');
   }
 
   return { messages, showMessage, showInfoMessage, showWarningMessage, showSuccessMessage, showDangerMessage, showBadMessage }
