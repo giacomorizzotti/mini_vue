@@ -11,8 +11,20 @@ export const useAuthStore = defineStore('auth', () => {
     const accessToken = ref(localStorage.getItem('accessToken'))
     const refreshToken = ref(localStorage.getItem('refreshToken'))
     const isAuthenticated = ref(localStorage.getItem('isAuthenticated') === 'true')
-    const userInfo = ref(JSON.parse(localStorage.getItem('userInfo') || 'null'))
-    const userAuthorizations = ref(JSON.parse(localStorage.getItem('userAuthorizations') || 'null'))
+    const userInfo = ref(
+        (() => {
+            const val = localStorage.getItem('userInfo')
+            if (!val || val === 'undefined') return null
+            return JSON.parse(val)
+        })()
+    )
+    const userAuthorizations = ref(
+        (() => {
+            const val = localStorage.getItem('userAuthorizations')
+            if (!val || val === 'undefined') return null
+            return JSON.parse(val)
+        })()
+    )
     const userRoles = computed(() => userInfo.value?.groups?.map(g => g.name) || [])
     const userGroups = computed(() => userInfo.value?.groups?.map(g => g.name) || [])
 
@@ -213,13 +225,23 @@ export const useAuthStore = defineStore('auth', () => {
         return true
     }
 
-    // Example: check if user has a role
-    function hasRole(role) {
-        return userRoles.value.includes(role)
-    }
-    // Example: check if user has a role
     function hasGroup(group) {
         return userGroups.value.includes(group)
+    }
+    function hasApp(app) {
+        return userAuthorizations.value.includes(app)
+    }
+    function hasRole(app, role) {
+        if (!userAuthorizations.value || !userAuthorizations.value[app]) return false
+        return userAuthorizations.value[app].some(g => g.group === role)
+    }
+    function hasValue(app, minValue) {
+        if (!userAuthorizations.value || !userAuthorizations.value[app]) return false
+        return userAuthorizations.value[app].some(g => g.value !== null && g.value >= minValue)
+    }
+    function hasRoleLevel(app, role, minLevel) {
+        if (!userAuthorizations.value || !userAuthorizations.value[app]) return false
+        return userAuthorizations.value[app].some(g => g.group === role && g.level >= minLevel)
     }
 
     return { 
@@ -238,8 +260,11 @@ export const useAuthStore = defineStore('auth', () => {
         fetchUserInfo,
         verifyToken, 
         deepVerifyToken,
-        hasRole,
         hasGroup,
+        hasApp,
+        hasRole,
+        hasValue,
+        hasRoleLevel,
     }
 
 })
