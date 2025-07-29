@@ -166,6 +166,8 @@ export const useAuthStore = defineStore('auth', () => {
 
     function logout() {
         clearTokens()
+        clearUserGroups()
+        clearUserAuthorizations()
         clearUserInfo()
         isAuthenticated.value = false
         localStorage.setItem('isAuthenticated', 'false')
@@ -183,7 +185,7 @@ export const useAuthStore = defineStore('auth', () => {
             setUserAuthorizations(response.data.authorizations)
         } catch (e) {
             clearUserInfo()
-            clearUserGroups
+            clearUserGroups()
             clearUserAuthorizations()
         }
     }
