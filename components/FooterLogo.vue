@@ -5,27 +5,16 @@
       type: [String],
       default: 'https://mini.uwa.agency/img/brand/mini_emblem.svg'
     },
+    width: {
+      type: [String],
+      default: '100%'
+    }
   })
 </script>
 
 <template>
-  <router-link :to="{ name: 'home' }" class=""><img :src="logo" class="logo emblem" alt="logo"/></router-link>
+  <router-link :to="{ name: 'home' }" class=""><img :src="logo" class="img logo m-auto" alt="logo" :style="{ maxWidth: width + '!important' }"/></router-link>
 </template>
 
 <style lang="scss" scoped>
-  img.logo {
-    &.emblem {
-      width: 66.666666%;
-      height: auto;
-      display: block;
-      filter: grayscale(100%);
-      opacity: 0.1;
-      transition: all 0.3s ease;
-      margin: 0 auto;
-      &:hover {
-        filter: grayscale(0);
-        opacity:1;
-      }
-    }
-  }
 </style>

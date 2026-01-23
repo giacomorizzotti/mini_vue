@@ -22,9 +22,4 @@ const { messages } = useMessage()
 </template>
 
 <style scoped>
-#message-box {
-  position: fixed;
-  bottom: calc(var(--margin) * 3);
-  z-index: 199;
-}
 </style>

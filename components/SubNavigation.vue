@@ -72,38 +72,4 @@ emit('loaded');
 </template>
 
 <style lang="scss" scoped>
-.full-page-container  {
-    z-index: 99;
-    transition: all 0.25s ease;
-    position: fixed;
-    min-height: 100vh;
-    top: 0; 
-    left: 0;
-    right: 0;
-    #black-layer {
-        position: absolute;
-        z-index: 1;
-        top: 0;
-        left: 0;
-        right: 0;
-        width: 100vw;
-        min-height: 100vh;
-        background: #141428;
-        background: linear-gradient(180deg,rgba(20, 20, 40, 1) 0%, rgba(20, 20, 40, 0) 100%);
-        transition: background 0.25s ease-out, height 0.25s ease-out, opacity 0.25s ease-out;
-    }
-    .subnav-content-wrapper {
-        overflow-y: auto;
-        min-width: 100%;
-        width: 100%;
-        max-width: 100%;
-        height: 90vh;
-        @media screen and (min-width: 992px) {
-            height: 100vh;
-            min-width: 90%;
-            width: 90%;
-            max-width: 90%;
-        }
-    }
-}
 </style>

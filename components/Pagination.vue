@@ -49,9 +49,4 @@ const emit = defineEmits(['update:currentPage'])
 </template>
 
 <style scoped>
-.pagination {
-  display: flex;
-  align-items: center;
-  gap: var(--basic-gap);
-}
 </style>

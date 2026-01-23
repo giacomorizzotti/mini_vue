@@ -1,4 +1,4 @@
-<script setup>
+<<script setup>
 import { ref, computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import Boxes from '@/mini/components/Boxes.vue';
@@ -21,9 +21,13 @@ const props = defineProps({
     default: true
   },
   invert: {
-    type: [Boolean],
+    type: [Boolean, String],
     default: null
-  }
+  },
+  logoFrame: {
+    type: [Boolean],
+    default: false
+  },
 })
 
 const headerBrandClasses = computed(() => {
@@ -33,18 +37,23 @@ const headerBrandClasses = computed(() => {
   if (props.invert === 'scroll' || props.invert === 'scrolled') classes.push("invert-scrolled")
   return classes
 })
+const headerBrandLogoBoxClasses = computed(() => {
+  const classes = [ 'logo-box' ]
+  if (props.logoFrame === true) classes.push("white-bg")
+  return classes
+})
 
 </script>
 
 <template>
   <Box id="brand" :class="headerBrandClasses">
     <Boxes class="g-0 align-items-center">
-      <Box>
+      <Box :class="headerBrandLogoBoxClasses" v-if="logo">
         <RouterLink v-if="logo" :to="{ name: 'home' }" class="">
             <img :src="logo" class="header-logo" alt="logo"/>
         </RouterLink>
       </Box>
-      <Box>
+      <Box class="title-box" v-if="title">
         <RouterLink :to="{ name: 'home' }" class="">
           <h3 class="site-title" v-html="title"/>
         </RouterLink>
@@ -54,100 +63,4 @@ const headerBrandClasses = computed(() => {
 </template>
 
 <style lang="scss" scoped>
-// brand
-header#header {
-  #brand, .brand {
-    display: flex;
-    flex-flow: row wrap;
-    align-items: center;
-    min-height: calc( (var(--padding) * 2 ) + var(--logo-height) );
-    a {
-      display: inline-block;
-      .logo, .header-logo {
-        transition: all 0.3s ease;
-        min-height: var(--logo-height);
-        height: var(--logo-height);
-        width: auto;
-      }
-    }
-    .site-title {
-      display: inline-block;
-      margin: 0 var(--margin) 0 0;
-      position: relative;
-      line-height: 1!important;
-    }
-  }
-}
-</style>
-
-<style lang="scss">
-body.top {
-  header#header {
-    &.neg, &.inv, &.top-neg, &.top-inv, &.top-bk, &.top-col {
-      #brand, .brand {
-        color: var(--white);
-        a {
-          .logo, .header-logo {
-            filter: brightness(0) invert(1);
-          }
-          .site-title {
-            color: var(--white);
-          }
-        }
-        .site-description {
-          color: var(--white);
-        }
-      }
-    }
-  }
-  &.open-menu, .open-menu {
-    header#header {
-      &.neg, &.inv, &.top-neg, &.top-inv, &.scroll-neg, &.scroll-inv {
-        background: var(--transp);
-      }
-    }
-    #brand, .brand {
-      img {
-        &.logo, &.header-logo {
-          filter: brightness(0) invert(1);
-        }
-      }
-      .site-title, .header-logo {
-        color:var(--white);
-      }
-      .site-description {
-        color: var(--white);
-      }
-    }
-  }
-}
-body.scroll, body.scrolled {
-  header#header {
-    #brand, .brand {
-      min-height: calc( (var(--padding) * 2 ) + var(--scroll-logo-height) );
-      a {
-        .logo, .header-logo {
-          min-height: var(--scroll-logo-height);
-          height: var(--scroll-logo-height);
-        }
-      }
-    }
-    &.neg, &.inv, &.scroll-neg, &.scroll-inv, &.scroll-bk, &.scroll-col {
-      #brand, .brand {
-        color: var(--white);
-        a {
-          .logo, .header-logo {
-            filter: brightness(0) invert(1);
-          }
-          .site-title {
-            color: var(--white);
-          }
-        }
-        .site-description {
-          color: var(--white);
-        }
-      }
-    }
-  }
-}
 </style>

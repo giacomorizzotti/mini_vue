@@ -77,12 +77,4 @@
 </template>
 
 <style lang="scss" scoped>
-.boxes {
-  display: flex;
-  position: relative;
-  flex-flow: row wrap;
-  --gap-y: calc(var(--gap) * 1);
-  --gap-x: calc(var(--gap) * 1);
-  gap: var(--gap-y) var(--gap-x);
-}
 </style>

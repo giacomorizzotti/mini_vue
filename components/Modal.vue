@@ -57,7 +57,7 @@ emit('loaded');
 <template>
     <Container v-show="visible" fw class="modal-box full-page-conatainer">
         <div id="black-layer"></div>
-        <Boxes id="click-to-hide-layer" fh class="justify-content-center align-items-center z-3" @click="handleLayerClick">
+        <Boxes id="click-to-hide-layer" fh class="justify-content-center align-items-center z-top" @click="handleLayerClick">
             <Box :size="50" padding="2" background="white" class="b-rad-10 box-shadow modal-content-wrapper">
                 <p class="m-0 right" style="position: absolute; right: calc( var(--margin) * 1.5 ); top: calc( var(--margin) * 1.5 ); z-index:9;">
                     <a class="pointer black-text">
@@ -71,30 +71,4 @@ emit('loaded');
 </template>
 
 <style lang="scss" scoped>
-.full-page-conatainer  {
-    z-index: 99;
-    transition: all 0.25s ease;
-    position: fixed;
-    min-height: 100vh;
-    top: 0; 
-    left: 0;
-    right: 0;
-    #black-layer {
-        position: absolute;
-        z-index: 1;
-        top: 0;
-        left: 0;
-        right: 0;
-        width: 100vw;
-        min-height: 100vh;
-        background: #141428;
-        background: linear-gradient(180deg,rgba(20, 20, 40, 1) 0%, rgba(20, 20, 40, 0) 100%);
-        transition: background 0.25s ease-out, height 0.25s ease-out, opacity 0.25s ease-out;
-    }
-    .modal-content-wrapper {
-        transition: transform 0.25s ease-out;
-        max-height: 80vh;
-        overflow-y: auto;
-    }
-}
 </style>

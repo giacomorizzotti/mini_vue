@@ -5,7 +5,7 @@
       default: 'mini'
     },
     company: {type: [String], default: "UWA.agency"},
-    phone: {type: [String], default: "+345 329 7079"},
+    phone: {type: [String], default: "+39 345 329 7079"},
     email: {type: [String], default: "ciao@uwa.agency"},
     address: {type: [String], default: "Via Sant'Andrea Apostolo 32"},
     addressTwo: {type: [String], default: "28100, Novara [NO], Italy"},
