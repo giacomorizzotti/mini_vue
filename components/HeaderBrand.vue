@@ -1,4 +1,4 @@
-<<script setup>
+<script setup>
 import { ref, computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import Boxes from '@/mini/components/Boxes.vue';
@@ -48,14 +48,14 @@ const headerBrandLogoBoxClasses = computed(() => {
 <template>
   <Box id="brand" :class="headerBrandClasses">
     <Boxes class="g-0 align-items-center">
-      <Box :class="headerBrandLogoBoxClasses" v-if="logo">
-        <RouterLink v-if="logo" :to="{ name: 'home' }" class="">
-            <img :src="logo" class="header-logo" alt="logo"/>
+      <Box :class="headerBrandLogoBoxClasses" v-if="props.logo">
+        <RouterLink :to="{ name: 'home' }" class="">
+            <img :src="props.logo" class="header-logo" alt="logo"/>
         </RouterLink>
       </Box>
-      <Box class="title-box" v-if="title">
+      <Box class="title-box" v-if="props.title">
         <RouterLink :to="{ name: 'home' }" class="">
-          <h3 class="site-title" v-html="title"/>
+          <h3 class="site-title" v-html="props.title"/>
         </RouterLink>
       </Box>
     </Boxes>
