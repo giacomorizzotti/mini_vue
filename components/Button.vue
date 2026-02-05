@@ -76,11 +76,9 @@ const buttonClasses = computed(() => {
   // Color
   if (props.color && colorClassMap[props.color]) {
     classes.push(colorClassMap[props.color])
-  }
-
-  // Invert
-  if (props.invert) {
-    classes.push('invert')
+    if (props.invert) {
+      classes.push(colorClassMap[props.color]+ '-invert')
+    }
   }
 
   // Size
