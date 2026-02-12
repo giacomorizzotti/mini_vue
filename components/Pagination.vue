@@ -25,7 +25,7 @@ const emit = defineEmits(['update:currentPage'])
 </script>
 
 <template>
-  <Box :size="100" class="pagination py-0" v-if="totalPages > 1">
+  <Box :size="100" class="pagination flex align-items-center py-0" v-if="totalPages > 1">
     <Button
       size="S"
       class="m-0"
@@ -35,7 +35,7 @@ const emit = defineEmits(['update:currentPage'])
     >
       Previous
     </Button>
-    <p class="S grey-text">{{ currentPage }} of {{ totalPages }}</p>
+    <p class="my-0 m-1 S grey-text">{{ currentPage }} of {{ totalPages }}</p>
     <Button
       size="S"
       class="m-0"
