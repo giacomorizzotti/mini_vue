@@ -1,30 +1,94 @@
 <script setup>
-import { ref } from 'vue'
-import Boxes from '@/mini/components/Boxes.vue';
-import Box from '@/mini/components/Box.vue';
+import Boxes from '@/mini/components/Boxes.vue'
+import Box from '@/mini/components/Box.vue'
+import Button from '@/mini/components/Button.vue'
+import Space from '@/mini/components/Space.vue'
 
-const username = ref('')
-const password = ref('')
-import { useAuth } from '@/mini/stores/auth.js'
-const { isAuthenticated, resourceOwnerPasswordBased } = useAuth('http://127.0.0.1:8000/o/token/', 'http://127.0.0.1:8000/o/introspect/')
+const props = defineProps({
+    username: {
+        type: String,
+        default: ''
+    },
+    password: {
+        type: String,
+        default: ''
+    },
+    isLoading: {
+        type: Boolean,
+        default: false
+    },
+    error: {
+        type: String,
+        default: ''
+    },
+    submitLabel: {
+        type: String,
+        default: 'Sign in'
+    },
+    loadingLabel: {
+        type: String,
+        default: 'Signing in...'
+    },
+    idPrefix: {
+        type: String,
+        default: 'login'
+    }
+})
 
-function login() {
-    resourceOwnerPasswordBased(username.value, password.value, 'c5j8a4MAe8C4BFbo3wFY2w8PhcXHXshMtp5Giees', 'V6ODlEGqeXQQfVV4zhPssAZ6q7RHNclSc2KJ0egHvQe1DiDju5iateb7etA0wBqI53JQLDuSCXv4gRwIrLGMmVvNq0Wgd6SSFYC7YPIVoDCFSGAmExl2YufVr8B9Bgd7')
+const emit = defineEmits(['update:username', 'update:password', 'submit'])
+
+function onSubmit() {
+    if (props.isLoading) return
+    emit('submit')
+}
+
+function onUsernameInput(event) {
+    emit('update:username', event.target.value)
+}
+
+function onPasswordInput(event) {
+    emit('update:password', event.target.value)
 }
 </script>
 
 <template>
-<form @submit.prevent="login">
-    <Boxes>
-        <Box :size="100">
-            <input v-model="username" placeholder="Username" required />
-        </Box>
-        <Box :size="100">
-            <input v-model="password" type="password" placeholder="Password" required />
-        </Box>
-        <Box :size="100">
-            <button type="submit" class="btn">Login</button>
-        </Box>
-    </Boxes>
-</form>
+    <form @submit.prevent="onSubmit" class="login-form">
+        <Boxes gap="0">
+            <Box size="100">
+                <label class="S" :for="`${idPrefix}-username`">Username</label>
+                <input
+                    :id="`${idPrefix}-username`"
+                    :value="props.username"
+                    type="text"
+                    required
+                    autocomplete="username"
+                    @input="onUsernameInput"
+                />
+            </Box>
+            <Box size="100">
+                <label class="S" :for="`${idPrefix}-password`">Password</label>
+                <input
+                    :id="`${idPrefix}-password`"
+                    :value="props.password"
+                    type="password"
+                    required
+                    autocomplete="current-password"
+                    @input="onPasswordInput"
+                />
+            </Box>
+            <Box v-if="props.error" size="100">
+                <p class="bad-text S">{{ props.error }}</p>
+            </Box>
+            <Space />
+            <Box size="100">
+                <Button type="submit" :disabled="props.isLoading" @click.prevent="onSubmit">
+                    {{ props.isLoading ? props.loadingLabel : props.submitLabel }}
+                </Button>
+            </Box>
+        </Boxes>
+
+    </form>
 </template>
+
+<style scoped>
+</style>

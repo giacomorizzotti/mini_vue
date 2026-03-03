@@ -28,29 +28,25 @@ function handleClick(event) {
 
 // Color mapping
 const colorClassMap = {
-  wh: 'white-btn', white: 'white-btn',
-  fw: 'false-white-btn', 'false-white': 'false-white-btn',
-  lg: 'light-grey-btn', 'light-grey': 'light-grey-btn',
-  grey: 'grey-btn',
-  dg: 'dark-grey-btn', 'dark-grey': 'dark-grey-btn',
-  fb: 'false-black-btn', 'false-black': 'false-black-btn',
-  bk: 'black-btn', black: 'black-btn',
-  col: 'main-color-btn', color: 'main-color-btn', 'main-color': 'main-color-btn',
-  'col-dark': 'main-color-dark-btn', 'color-dark': 'main-color-dark-btn', 'main-color-dark': 'main-color-dark-btn',
-  'second-col': 'second-color-btn', 'second-color': 'second-color-btn',
-  'second-col-dark': 'second-color-dark-btn', 'second-color-dark': 'second-color-dark-btn',
-  'third-col': 'third-color-btn', 'third-color': 'third-color-btn',
-  'third-col-dark': 'third-color-dark-btn', 'third-color-dark': 'third-color-dark-btn',
-  'fourth-col': 'fourth-color-btn', 'fourth-color': 'fourth-color-btn',
-  'fourth-col-dark': 'fourth-color-dark-btn', 'fourth-color-dark': 'fourth-color-dark-btn',
-  info: 'info-btn', success: 'success-btn', warning: 'warning-btn', danger: 'danger-btn', bad: 'bad-btn',
-  'acid-green': 'acid-green-btn', gingerbread: 'gingerbread-btn',
-  mini: 'mini-btn', 'mini-dark': 'mini-dark-btn', 'mini-second': 'mini-second-btn', 'mini-third': 'mini-third-btn', 'mini-fourth': 'mini-fourth-btn',
-  uwa: 'uwa-btn', 'uwa-dark': 'uwa-dark-btn', 'uwa-second': 'uwa-second-btn', 'uwa-third': 'uwa-third-btn', 'uwa-fourth': 'uwa-fourth-btn', 'uwa-link': 'uwa-link-btn',
-  aroma: 'aroma-btn', 'aroma-dark': 'aroma-dark-btn',
-  pdp: 'pdp-btn', 'pdp-second': 'pdp-second-btn', 'pdp-third': 'pdp-third-btn', 'pdp-fourth': 'pdp-fourth-btn',
-  lns: 'lns-btn', 'lns-dark': 'lns-dark-btn',
-  dt: 'dt-btn',
+  wh: 'white', white: 'white', fw: 'false-white', 'false-white': 'false-white',
+  lg: 'light-grey', 'light-grey': 'light-grey', grey: 'grey', dg: 'dark-grey', 'dark-grey': 'dark-grey', 
+  fb: 'false-black', 'false-black': 'false-black', bk: 'black', black: 'black', 
+  col: 'main-color', color: 'main-color', 'main-color': 'main-color',
+  'col-dark': 'main-color-dark', 'color-dark': 'main-color-dark', 'main-color-dark': 'main-color-dark',
+  'second': 'second-color', 'second-color': 'second-color',
+  'second-dark': 'second-color-dark', 'second-color-dark': 'second-color-dark',
+  'third': 'third-color', 'third-color': 'third-color',
+  'third-dark': 'third-color-dark', 'third-color-dark': 'third-color-dark',
+  'fourth': 'fourth-color', 'fourth-color': 'fourth-color',
+  'fourth-dark': 'fourth-color-dark', 'fourth-color-dark': 'fourth-color-dark',
+  'link': 'link','link-color': 'link',
+  'link-hover': 'link-hover',
+  info: 'info', success: 'success', warning: 'warning', danger: 'danger', bad: 'bad',
+  'acid-green': 'acid-green', gingerbread: 'gingerbread',
+  blue: 'blue', 'light-blue': 'light-blue', 'dark-blue': 'dark-blue',
+  mini: 'mini', 'mini-dark': 'mini-dark', 'mini-second': 'mini-second', 'mini-third': 'mini-third', 'mini-fourth': 'mini-fourth',
+  uwa: 'uwa', 'uwa-dark': 'uwa-dark', 'uwa-second': 'uwa-second', 'uwa-third': 'uwa-third', 'uwa-fourth': 'uwa-fourth', 'uwa-link': 'uwa-link',
+  dt: 'dt',
   grad: 'btn-grad',
   grad2: 'btn-grad-second',
   gradtwo: 'btn-grad-second',
@@ -77,7 +73,11 @@ const buttonClasses = computed(() => {
   if (props.color && colorClassMap[props.color]) {
     classes.push(colorClassMap[props.color])
     if (props.invert) {
-      classes.push(colorClassMap[props.color]+ '-invert')
+      if(props.color) {
+        classes.push(colorClassMap[props.color]+ '-invert')
+      } else {
+        classes.push('btn-invert')
+      }
     }
   }
 

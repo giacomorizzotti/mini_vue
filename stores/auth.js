@@ -1,272 +1,219 @@
 import { defineStore } from 'pinia'
-import { ref, computed} from 'vue'
-import axios from 'axios'
-import { useRouter } from 'vue-router'
-import { useMessage } from '@/mini/composables/useMessage'
-const { showMessage }= useMessage()
+import { ref, computed } from 'vue'
+import {
+    OAUTH_CLIENT_ID,
+    OAUTH_CLIENT_SECRET,
+    OAUTH_SCOPE,
+    OAUTH_TOKEN_ENDPOINT,
+    OAUTH_USERINFO_ENDPOINT,
+} from '@/config/auth'
+
+const ACCESS_TOKEN_KEY = 'auth.accessToken'
+const REFRESH_TOKEN_KEY = 'auth.refreshToken'
+const EXPIRES_AT_KEY = 'auth.expiresAt'
+const USERINFO_KEY = 'auth.userInfo'
+
+function readJsonFromStorage(key) {
+    const raw = localStorage.getItem(key)
+    if (!raw) return null
+    try {
+        return JSON.parse(raw)
+    } catch {
+        return null
+    }
+}
 
 export const useAuthStore = defineStore('auth', () => {
-    
-    const router = useRouter()
-    const accessToken = ref(localStorage.getItem('accessToken'))
-    const refreshToken = ref(localStorage.getItem('refreshToken'))
-    const isAuthenticated = ref(localStorage.getItem('isAuthenticated') === 'true')
-    const userInfo = ref(
-        (() => {
-            const val = localStorage.getItem('userInfo')
-            if (!val || val === 'undefined') return null
-            return JSON.parse(val)
-        })()
-    )
-    const userAuthorizations = ref(
-        (() => {
-            const val = localStorage.getItem('userAuthorizations')
-            if (!val || val === 'undefined') return null
-            return JSON.parse(val)
-        })()
-    )
-    const userRoles = computed(() => userInfo.value?.groups?.map(g => g.name) || [])
-    const userGroups = computed(() => userInfo.value?.groups?.map(g => g.name) || [])
+    const accessToken = ref(localStorage.getItem(ACCESS_TOKEN_KEY) || '')
+    const refreshToken = ref(localStorage.getItem(REFRESH_TOKEN_KEY) || '')
+    const initialExpiresAt = Number(localStorage.getItem(EXPIRES_AT_KEY) || 0)
+    const expiresAt = ref(Number.isFinite(initialExpiresAt) ? initialExpiresAt : 0)
+    const userInfo = ref(readJsonFromStorage(USERINFO_KEY))
+    const isLoading = ref(false)
+    const authError = ref('')
 
-    function setTokens(access=null, refresh=null) {
-        if (access) {
-            accessToken.value = access
-            localStorage.setItem('accessToken', access)
-        }
-        if (refresh) {
-            refreshToken.value = refresh
-            localStorage.setItem('refreshToken', refresh)
-        }
+    const isAuthenticated = computed(() => Boolean(accessToken.value))
+    const authHeaders = computed(() => {
+        if (!accessToken.value) return {}
+        return { Authorization: `Bearer ${accessToken.value}` }
+    })
+
+    function persistTokens({ accessTokenValue, refreshTokenValue, expiresInSeconds }) {
+        accessToken.value = accessTokenValue || ''
+        refreshToken.value = refreshTokenValue || ''
+        expiresAt.value = Date.now() + Number(expiresInSeconds || 0) * 1000
+
+        localStorage.setItem(ACCESS_TOKEN_KEY, accessToken.value)
+        localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken.value)
+        localStorage.setItem(EXPIRES_AT_KEY, String(expiresAt.value))
     }
 
-    function clearTokens() {
-        accessToken.value = null
-        refreshToken.value = null
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
-    }
-
-    function setUserInfo(info) {
-        userInfo.value = info
-        localStorage.setItem('userInfo', JSON.stringify(info))
-    }
-    function clearUserInfo() {
+    function clearSession() {
+        accessToken.value = ''
+        refreshToken.value = ''
+        expiresAt.value = 0
         userInfo.value = null
-        localStorage.removeItem('userInfo')
+        authError.value = ''
+
+        localStorage.removeItem(ACCESS_TOKEN_KEY)
+        localStorage.removeItem(REFRESH_TOKEN_KEY)
+        localStorage.removeItem(EXPIRES_AT_KEY)
+        localStorage.removeItem(USERINFO_KEY)
     }
 
-    function setUserGroups(groups) {
-        userGroups.value = groups
-        localStorage.setItem('userGroups', JSON.stringify(groups))
-    }
-    function clearUserGroups() {
-        userGroups.value = null
-        localStorage.removeItem('userGroups')
+    async function fetchUserInfo(userInfoEndpoint = OAUTH_USERINFO_ENDPOINT) {
+        if (!accessToken.value) return null
+
+        const response = await fetch(userInfoEndpoint, {
+            headers: {
+                ...authHeaders.value,
+            },
+        })
+
+        if (!response.ok) {
+            throw new Error('Unable to load user info')
+        }
+
+        const payload = await response.json()
+        userInfo.value = payload
+        localStorage.setItem(USERINFO_KEY, JSON.stringify(payload))
+        return payload
     }
 
-    function setUserAuthorizations(authorizations) {
-        userAuthorizations.value = authorizations
-        localStorage.setItem('userAuthorizations', JSON.stringify(authorizations))
-    }
-    function clearUserAuthorizations() {
-        userAuthorizations.value = null
-        localStorage.removeItem('userAuthorizations')
-    }
+    async function resourceOwnerPasswordBased({
+        username,
+        password,
+        clientId = OAUTH_CLIENT_ID,
+        clientSecret = OAUTH_CLIENT_SECRET,
+        getTokenEndpoint = OAUTH_TOKEN_ENDPOINT,
+        userInfoEndpoint = OAUTH_USERINFO_ENDPOINT,
+        scope = OAUTH_SCOPE,
+    }) {
+        authError.value = ''
+        isLoading.value = true
 
-    function isTokenExpired(token) {
-        if (!token) return true
         try {
-        const decoded = jwt_decode(token)
-        // exp is in seconds
-        return decoded.exp * 1000 < Date.now()
-        } catch {
-        return true
+            const formData = new URLSearchParams()
+            formData.set('grant_type', 'password')
+            formData.set('username', username)
+            formData.set('password', password)
+            formData.set('scope', scope)
+            formData.set('client_id', clientId)
+            if (clientSecret) {
+                formData.set('client_secret', clientSecret)
+            }
+
+            const response = await fetch(getTokenEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: formData.toString(),
+            })
+
+            const payload = await response.json().catch(() => ({}))
+
+            if (!response.ok || !payload.access_token) {
+                const message = payload.error_description || payload.error || 'Invalid credentials'
+                throw new Error(message)
+            }
+
+            persistTokens({
+                accessTokenValue: payload.access_token,
+                refreshTokenValue: payload.refresh_token,
+                expiresInSeconds: payload.expires_in,
+            })
+
+            await fetchUserInfo(userInfoEndpoint).catch(() => null)
+            return true
+        } catch (error) {
+            clearSession()
+            authError.value = error instanceof Error ? error.message : 'Login failed'
+            return false
+        } finally {
+            isLoading.value = false
         }
     }
 
-    async function refreshAccessToken(refreshEndpoint) {
+    async function loginWithPassword(username, password) {
+        return resourceOwnerPasswordBased({ username, password })
+    }
+
+    async function refreshAccessToken(refreshEndpoint = OAUTH_TOKEN_ENDPOINT) {
         if (!refreshToken.value) return false
-        try {
-            const response = await axios.post(refreshEndpoint, {
-                refresh: refreshToken.value
-            })
-            if (response.data.access) {
-                setTokens(response.data.access, response.data.refresh)
-            }
-            if (response.data.access_token && response.data.refresh_token) {
-                setTokens(response.data.access_token, response.data.refresh_token)
-            }
-            return true
-        } catch {
-            logout()
+
+        const formData = new URLSearchParams()
+        formData.set('grant_type', 'refresh_token')
+        formData.set('refresh_token', refreshToken.value)
+        formData.set('client_id', OAUTH_CLIENT_ID)
+        if (OAUTH_CLIENT_SECRET) {
+            formData.set('client_secret', OAUTH_CLIENT_SECRET)
+        }
+
+        const response = await fetch(refreshEndpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData.toString(),
+        })
+
+        const payload = await response.json().catch(() => ({}))
+
+        if (!response.ok || !payload.access_token) {
+            clearSession()
             return false
         }
+
+        persistTokens({
+            accessTokenValue: payload.access_token,
+            refreshTokenValue: payload.refresh_token || refreshToken.value,
+            expiresInSeconds: payload.expires_in,
+        })
+        return true
     }
 
-    async function resourceOwnerPasswordBased({username, password, clientId, clientSecret, getTokenEndpoint, userInfoEndpoint, scope = 'openid read write introspection groups'}) {
-        try {
-            const params = new URLSearchParams()
-            params.append('grant_type', 'password')
-            params.append('username', username)
-            params.append('password', password)
-            params.append('scope', scope)
-
-            const response = await axios.post(
-                getTokenEndpoint, 
-                params,
-                {
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded",
-                    },
-                    auth: {
-                        username: clientId,
-                        password: clientSecret
-                    }
-                }
-            )
-            if (response.data.access) {
-                setTokens(response.data.access, response.data.refresh)
-            }
-            if (response.data.access_token && response.data.refresh_token) {
-                setTokens(response.data.access_token, response.data.refresh_token)
-            }
-            isAuthenticated.value = true
-            localStorage.setItem('isAuthenticated', 'true')
-            await fetchUserInfo(userInfoEndpoint)
-            return true
-        } catch (e) {
-            isAuthenticated.value = false
-            localStorage.setItem('isAuthenticated', 'false')
-            return false
-        }
-    }
-
-    async function login({ username, password, getTokenEndpoint, userInfoEndpoint }) {
-        try {
-            const response = await axios.post(getTokenEndpoint, {
-                username,
-                password,
-            })
-            if (response.data.access) {
-                setTokens(response.data.access, response.data.refresh)
-            }
-            if (response.data.access_token && response.data.refresh_token) {
-                setTokens(response.data.access_token, response.data.refresh_token)
-            }
-            isAuthenticated.value = true
-            localStorage.setItem('isAuthenticated', 'true')
-            await fetchUserInfo(userInfoEndpoint)
-            return true
-        } catch (e) {
-            isAuthenticated.value = false
-            localStorage.setItem('isAuthenticated', 'false')
-            return false
-        }
+    async function ensureValidToken(refreshEndpoint = OAUTH_TOKEN_ENDPOINT) {
+        if (!accessToken.value) return false
+        if (!Number.isFinite(expiresAt.value) || expiresAt.value <= 0) return true
+        if (Date.now() < expiresAt.value - 30000) return true
+        return refreshAccessToken(refreshEndpoint)
     }
 
     function logout() {
-        clearTokens()
-        clearUserGroups()
-        clearUserAuthorizations()
-        clearUserInfo()
-        isAuthenticated.value = false
-        localStorage.setItem('isAuthenticated', 'false')
-        router.push('/')
+        clearSession()
     }
 
-    async function fetchUserInfo(userInfoEndpoint) {
-        if (!accessToken.value) return
-        try {
-            const response = await axios.get(userInfoEndpoint, {
-                headers: { Authorization: `Bearer ${accessToken.value}` }
-            })
-            setUserInfo(response.data)
-            setUserGroups(response.data.groups)
-            setUserAuthorizations(response.data.authorizations)
-        } catch (e) {
-            clearUserInfo()
-            clearUserGroups()
-            clearUserAuthorizations()
+    async function authFetch(input, init = {}) {
+        const valid = await ensureValidToken()
+        if (!valid || !accessToken.value) {
+            throw new Error('Not authenticated')
         }
+
+        const requestHeaders = new Headers(init.headers || {})
+        requestHeaders.set('Authorization', `Bearer ${accessToken.value}`)
+
+        return fetch(input, {
+            ...init,
+            headers: requestHeaders,
+        })
     }
 
-    function verifyToken() {
-        if (!accessToken.value) {
-            isAuthenticated.value = false
-            localStorage.setItem('isAuthenticated', 'false')
-            return false
-        }
-        // Optionally decode and check expiry
-        isAuthenticated.value = true
-        localStorage.setItem('isAuthenticated', 'true')
-        return true
-    }
-
-    async function deepVerifyToken(verifyTokenEndpoint) {
-        if (!accessToken.value) {
-            isAuthenticated.value = false
-            return false
-        }
-        try {
-            await axios.post(verifyTokenEndpoint, { token: accessToken.value })
-            isAuthenticated.value = true
-            localStorage.setItem('isAuthenticated', 'true')
-            return true
-        } catch {
-            isAuthenticated.value = false
-            localStorage.setItem('isAuthenticated', 'false')
-            return false
-        }
-    }
-
-    // Call this before any protected API call
-    async function ensureValidToken(refreshEndpoint) {
-        if (isTokenExpired(accessToken.value)) {
-            return await refreshAccessToken(refreshEndpoint)
-        }
-        return true
-    }
-
-    function hasGroup(group) {
-        return userGroups.value.includes(group)
-    }
-    function hasApp(app) {
-        return userAuthorizations.value.includes(app)
-    }
-    function hasRole(app, role) {
-        if (!userAuthorizations.value || !userAuthorizations.value[app]) return false
-        return userAuthorizations.value[app].some(g => g.group === role)
-    }
-    function hasValue(app, minValue) {
-        if (!userAuthorizations.value || !userAuthorizations.value[app]) return false
-        return userAuthorizations.value[app].some(g => g.value !== null && g.value >= minValue)
-    }
-    function hasRoleLevel(app, role, minLevel) {
-        if (!userAuthorizations.value || !userAuthorizations.value[app]) return false
-        return userAuthorizations.value[app].some(g => g.group === role && g.level >= minLevel)
-    }
-
-    return { 
+    return {
         accessToken,
-        refreshToken, 
-        isAuthenticated,
+        refreshToken,
         userInfo,
-        userRoles,
-        userGroups,
-        userAuthorizations,
-        login, 
-        resourceOwnerPasswordBased, 
+        isAuthenticated,
+        isLoading,
+        authError,
+        authHeaders,
+        loginWithPassword,
+        resourceOwnerPasswordBased,
         refreshAccessToken,
         ensureValidToken,
-        logout,
         fetchUserInfo,
-        verifyToken, 
-        deepVerifyToken,
-        hasGroup,
-        hasApp,
-        hasRole,
-        hasValue,
-        hasRoleLevel,
+        authFetch,
+        logout,
     }
 
 })

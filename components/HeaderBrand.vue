@@ -10,11 +10,12 @@ const { scrollClass } = useScrollState()
 
 const props = defineProps({
   logo: {
-    type: [null, String],
+    type: [null, Boolean, String],
     default: 'https://mini.uwa.agency/img/brand/mini_emblem.svg'
   },
   title: {
-    type: [String]
+    type: [String],
+    default: ''
   },
   menuToggle: {
     type: [Boolean],
@@ -28,6 +29,36 @@ const props = defineProps({
     type: [Boolean],
     default: false
   },
+})
+
+const DEFAULT_LOGO = 'https://mini.uwa.agency/img/brand/mini_emblem.svg'
+
+function resolveWithBaseUrl(path) {
+  const baseUrl = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '/')
+  const normalizedPath = path.startsWith('/') ? path.slice(1) : path
+  return `${baseUrl}${normalizedPath}`
+}
+
+const resolvedLogo = computed(() => {
+  if (props.logo === false) return false
+
+  const rawLogo = typeof props.logo === 'string' ? props.logo.trim() : ''
+  const logoToUse = rawLogo || DEFAULT_LOGO
+
+  if (/^(https?:)?\/\//.test(logoToUse) || logoToUse.startsWith('data:') || logoToUse.startsWith('blob:')) {
+    return logoToUse
+  }
+
+  return resolveWithBaseUrl(logoToUse)
+})
+
+const resolvedTitle = computed(() => {
+  const rawTitle = typeof props.title === 'string' ? props.title.trim() : ''
+  if (rawTitle) return props.title
+  if (typeof document !== 'undefined' && typeof document.title === 'string' && document.title.trim()) {
+    return document.title
+  }
+  return ''
 })
 
 const headerBrandClasses = computed(() => {
@@ -48,14 +79,14 @@ const headerBrandLogoBoxClasses = computed(() => {
 <template>
   <Box id="brand" :class="headerBrandClasses">
     <Boxes class="g-0 align-items-center">
-      <Box :class="headerBrandLogoBoxClasses" v-if="props.logo">
+      <Box :class="headerBrandLogoBoxClasses" v-if="props.logo && props.logo !== false">
         <RouterLink :to="{ name: 'home' }" class="">
-            <img :src="props.logo" class="header-logo" alt="logo"/>
+            <img :src="resolvedLogo" class="header-logo" alt="logo"/>
         </RouterLink>
       </Box>
-      <Box class="title-box" v-if="props.title">
+      <Box class="title-box" v-if="resolvedTitle">
         <RouterLink :to="{ name: 'home' }" class="">
-          <h3 class="site-title" v-html="props.title"/>
+          <h3 class="site-title" v-html="resolvedTitle"/>
         </RouterLink>
       </Box>
     </Boxes>

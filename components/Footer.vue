@@ -1,9 +1,4 @@
 <script setup>
-  import { computed } from 'vue'
-  import Container from './Container.vue'
-  import Boxes from './Boxes.vue'
-  import Box from './Box.vue'
-  import Menu from './Menu.vue'
   const props = defineProps({
     logoUrl: {
       type: [String],

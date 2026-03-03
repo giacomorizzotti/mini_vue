@@ -2,7 +2,7 @@
   import { RouterLink, RouterView } from 'vue-router'
   const props = defineProps({
     logo: {
-      type: [String],
+      type: [Boolean, String],
       default: 'https://mini.uwa.agency/img/brand/mini_emblem.svg'
     },
     width: {
@@ -13,7 +13,7 @@
 </script>
 
 <template>
-  <router-link :to="{ name: 'home' }" class=""><img :src="logo" class="img logo m-auto" alt="logo" :style="{ maxWidth: width + '!important' }"/></router-link>
+  <router-link :to="{ name: 'home' }" class=""><img v-if="logo" :src="logo" class="img logo m-auto" alt="logo" :style="{ maxWidth: width + '!important' }"/></router-link>
 </template>
 
 <style lang="scss" scoped>
