@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed } from 'vue'
-import { RouterLink } from 'vue-router'
+import { ref, computed, inject } from 'vue'
+import { RouterLink, routerKey } from 'vue-router'
 import Boxes from '@/mini/components/Boxes.vue';
 import Box from '@/mini/components/Box.vue';
 import { useMenuState } from '@/mini/composables/useMenuState'
@@ -32,6 +32,7 @@ const props = defineProps({
 })
 
 const DEFAULT_LOGO = 'https://mini.uwa.agency/img/brand/mini_emblem.svg'
+const router = inject(routerKey, null)
 
 function resolveWithBaseUrl(path) {
   const baseUrl = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '/')
@@ -61,6 +62,9 @@ const resolvedTitle = computed(() => {
   return ''
 })
 
+const brandLinkComponent = computed(() => (router ? RouterLink : 'a'))
+const brandLinkProps = computed(() => (router ? { to: { name: 'home' } } : { href: resolveWithBaseUrl('/') }))
+
 const headerBrandClasses = computed(() => {
   const classes = [ 'p-0', scrollClass.value, menuStateClass.value ]
   if (props.invert === true) classes.push("invert")
@@ -80,14 +84,14 @@ const headerBrandLogoBoxClasses = computed(() => {
   <Box id="brand" :class="headerBrandClasses">
     <Boxes class="g-0 align-items-center">
       <Box :class="headerBrandLogoBoxClasses" v-if="props.logo && props.logo !== false">
-        <RouterLink :to="{ name: 'home' }" class="">
+        <component :is="brandLinkComponent" v-bind="brandLinkProps" class="">
             <img :src="resolvedLogo" class="header-logo" alt="logo"/>
-        </RouterLink>
+        </component>
       </Box>
       <Box class="title-box" v-if="resolvedTitle">
-        <RouterLink :to="{ name: 'home' }" class="">
+        <component :is="brandLinkComponent" v-bind="brandLinkProps" class="">
           <h3 class="site-title" v-html="resolvedTitle"/>
-        </RouterLink>
+        </component>
       </Box>
     </Boxes>
   </Box>
