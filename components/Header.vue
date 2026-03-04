@@ -14,6 +14,10 @@ const props = defineProps({
     type: [Boolean],
     default: null
   },
+  open: {
+    type: Boolean,
+    default: false
+  },
 })
 
 const headerClasses = computed(() => {
@@ -22,6 +26,7 @@ const headerClasses = computed(() => {
   if (props.invert === true) classes.push("invert")
   if (props.invert === 'top') classes.push("invert-top")
   if (props.invert === 'scroll' || props.invert === 'scrolled') classes.push("invert-scrolled")
+  if (props.open === true) classes.push("open")
   return classes
 })
 

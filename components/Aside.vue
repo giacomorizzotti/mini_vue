@@ -9,6 +9,10 @@
     side: {
       type: [Number, String],
       default: null
+    },
+    open: {
+      type: Boolean,
+      default: false
     }
   })
 
@@ -19,13 +23,20 @@
     } else if (props.side === 'right' || props.side === 'r') {
       id.push('side-right')
     }
-  return id
+    return id
+  })
+  const asideClass = computed(() => {
+    const classes = []
+    if (props.open === true) {
+      classes.push('open')
+    }
+    return classes
   })
 
 </script>
 
 <template>
-  <aside :id="asideId" :class="[scrollClass, menuStateClass]">
+  <aside :id="asideId" :class="[scrollClass, menuStateClass, asideClass]">
     <slot />
   </aside>
 </template>

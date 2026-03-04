@@ -25,12 +25,21 @@ const emit = defineEmits(['update:currentPage'])
 </script>
 
 <template>
-  <Box :size="100" class="pagination flex align-items-center py-0" v-if="totalPages > 1">
+  <div class="pagination flex align-items-center" v-if="totalPages > 1">
+    <Button
+      size="S"
+      class="my-0 me-05"
+      :disabled="currentPage === 1"
+      :class="currentPage === 1 ? 'light-grey-btn' : ''"
+      @click="goToPage(1)"
+    >
+      First
+    </Button>
     <Button
       size="S"
       class="m-0"
       :disabled="currentPage === 1"
-      :invert="currentPage === 1"
+      :class="currentPage === 1 ? 'light-grey-btn' : ''"
       @click="goToPage(currentPage - 1)"
     >
       Previous
@@ -38,14 +47,23 @@ const emit = defineEmits(['update:currentPage'])
     <p class="my-0 m-1 S grey-text">{{ currentPage }} of {{ totalPages }}</p>
     <Button
       size="S"
-      class="m-0"
-      :invert="currentPage === totalPages"
+      class="my-0 me-05"
       :disabled="currentPage === totalPages"
+      :class="currentPage === totalPages ? 'light-grey-btn' : ''"
       @click="goToPage(currentPage + 1)"
     >
       Next
     </Button>
-  </Box>
+    <Button
+      size="S"
+      class="m-0"
+      :disabled="currentPage === totalPages"
+      :class="currentPage === totalPages ? 'light-grey-btn' : ''"
+      @click="goToPage(totalPages)"
+    >
+      Last
+    </Button>
+  </div>
 </template>
 
 <style scoped>
