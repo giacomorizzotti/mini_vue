@@ -85,7 +85,7 @@ onMounted(() => {
         </div>
         <div class="consent-buttons">
             <button class="btn wh-btn L consent" @click="privacyConsent">Accetta</button>
-            <button class="btn wh-btn invert L consent" @click="privacyDeny">Rifiuta (solo cookie tecnici)</button>
+            <button class="btn wh-btn-invert L consent" @click="privacyDeny">Rifiuta (solo cookie tecnici)</button>
         </div>
         <p v-if="choose===true" class="consent-status">Scelta: {{ getPrivacyStatus }}</p>
     </div>

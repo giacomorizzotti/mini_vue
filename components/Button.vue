@@ -74,7 +74,7 @@ const buttonClasses = computed(() => {
     classes.push(colorClassMap[props.color]+'-btn')
     if (props.invert) {
       if(props.color) {
-        classes.push(colorClassMap[props.color]+ '-invert')
+        classes.push(colorClassMap[props.color]+ '-btn-invert')
       } else {
         classes.push('btn-invert')
       }
