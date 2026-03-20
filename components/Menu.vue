@@ -1,7 +1,11 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useMenuState } from '@/mini/composables/useMenuState'
+import { useAuthStore } from '@/mini/stores/auth'
+
 const { menuStateClass, menuClose } = useMenuState()
+const authStore = useAuthStore()
+
 const props = defineProps({
   menuItems: {
     type: [Array],
@@ -16,6 +20,7 @@ const props = defineProps({
     default: 'column'
   }
 })
+
 const directionClass = computed(() => {
   const classes = []
   if (props.direction === 'row') {
@@ -24,6 +29,22 @@ const directionClass = computed(() => {
     classes.push('column')
   }
   return classes
+})
+
+const visibleMenuItems = computed(() => {
+  if (!props.menuItems) return []
+
+  return props.menuItems.filter(item => {
+    if (item?.requiresAuth && !authStore.isAuthenticated) {
+      return false
+    }
+
+    if (item?.guestOnly && authStore.isAuthenticated) {
+      return false
+    }
+
+    return true
+  })
 })
 
 const processedMenuClose = () => {
@@ -38,7 +59,7 @@ const processedMenuClose = () => {
 <template>
   <nav class="menu" :class="menuStateClass">
     <ul class="menu" :class="directionClass">
-      <li v-if="menuItems" v-for="item in menuItems" class="item">
+      <li v-if="menuItems" v-for="item in visibleMenuItems" :key="item.routeName || item.link || item.title" class="item">
         <router-link 
           :to="{ name: item.routeName }"
           :href="item.link"
