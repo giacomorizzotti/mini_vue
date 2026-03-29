@@ -54,11 +54,11 @@ const colorClassMap = {
 
 // Size mapping
 const sizeClassMap = {
-  xs: 'xs', XS: 'xs', 'extra-small': 'xs',
-  s: 's', S: 's', small: 's',
-  l: 'l', L: 'l', large: 'l',
-  xl: 'xl', XL: 'xl', 'extra-large': 'xl',
-  xxl: 'xxl', XXL: 'xxl', 'extra-extra-large': 'xxl'
+  xs: 'XS', XS: 'XS', 'extra-small': 'XS',
+  s: 'S', S: 'S', small: 'S',
+  l: 'L', L: 'L', large: 'L',
+  xl: 'XL', XL: 'XL', 'extra-large': 'XL',
+  xxl: 'XXL', XXL: 'XXL', 'extra-extra-large': 'XXL'
 }
 
 // Corners mapping

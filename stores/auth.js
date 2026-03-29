@@ -142,35 +142,74 @@ export const useAuthStore = defineStore('auth', () => {
     async function refreshAccessToken(refreshEndpoint = OAUTH_TOKEN_ENDPOINT) {
         if (!refreshToken.value) return false
 
-        const formData = new URLSearchParams()
-        formData.set('grant_type', 'refresh_token')
-        formData.set('refresh_token', refreshToken.value)
-        formData.set('client_id', OAUTH_CLIENT_ID)
-        if (OAUTH_CLIENT_SECRET) {
-            formData.set('client_secret', OAUTH_CLIENT_SECRET)
-        }
-
         const response = await fetch(refreshEndpoint, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: formData.toString(),
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh: refreshToken.value }),
         })
 
         const payload = await response.json().catch(() => ({}))
 
-        if (!response.ok || !payload.access_token) {
+        if (!response.ok || !payload.access) {
             clearSession()
             return false
         }
 
         persistTokens({
-            accessTokenValue: payload.access_token,
-            refreshTokenValue: payload.refresh_token || refreshToken.value,
+            accessTokenValue: payload.access,
+            refreshTokenValue: payload.refresh || refreshToken.value,
             expiresInSeconds: payload.expires_in,
         })
         return true
+    }
+
+    async function login({ username, password, getTokenEndpoint = OAUTH_TOKEN_ENDPOINT, userInfoEndpoint = OAUTH_USERINFO_ENDPOINT }) {
+        authError.value = ''
+        isLoading.value = true
+
+        try {
+            const response = await fetch(getTokenEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            })
+
+            const payload = await response.json().catch(() => ({}))
+
+            if (!response.ok || !payload.access) {
+                const message = payload.detail || payload.error || 'Invalid credentials'
+                throw new Error(message)
+            }
+
+            persistTokens({
+                accessTokenValue: payload.access,
+                refreshTokenValue: payload.refresh,
+                expiresInSeconds: payload.expires_in,
+            })
+
+            await fetchUserInfo(userInfoEndpoint).catch(() => null)
+            return true
+        } catch (error) {
+            clearSession()
+            authError.value = error instanceof Error ? error.message : 'Login failed'
+            return false
+        } finally {
+            isLoading.value = false
+        }
+    }
+
+    async function deepVerifyToken(verifyEndpoint) {
+        if (!accessToken.value) return false
+        try {
+            const response = await fetch(verifyEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: accessToken.value }),
+            })
+            return response.ok
+        } catch {
+            return false
+        }
     }
 
     async function ensureValidToken(refreshEndpoint = OAUTH_TOKEN_ENDPOINT) {
@@ -207,10 +246,12 @@ export const useAuthStore = defineStore('auth', () => {
         isLoading,
         authError,
         authHeaders,
+        login,
         loginWithPassword,
         resourceOwnerPasswordBased,
         refreshAccessToken,
         ensureValidToken,
+        deepVerifyToken,
         fetchUserInfo,
         authFetch,
         logout,
