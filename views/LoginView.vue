@@ -17,7 +17,7 @@ async function submitLogin() {
   if (authStore.isLoading) return
   const ok = await authStore.loginWithPassword(username.value, password.value)
   if (ok) {
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/'
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/cards'
     router.replace(redirect)
   }
 }
