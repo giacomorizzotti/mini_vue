@@ -5,6 +5,7 @@ const emit = defineEmits(['click'])
 const props = defineProps({
   color: String,
   invert: Boolean,
+  active: Boolean,
   text: {
     type: String,
   },
@@ -72,13 +73,11 @@ const buttonClasses = computed(() => {
   // Color
   if (props.color && colorClassMap[props.color]) {
     classes.push(colorClassMap[props.color]+'-btn')
-    if (props.invert) {
-      if(props.color) {
-        classes.push(colorClassMap[props.color]+ '-btn-invert')
-      } else {
-        classes.push('btn-invert')
-      }
+    if (props.invert || props.active) {
+      classes.push(colorClassMap[props.color]+ '-btn-invert')
     }
+  } else if (props.invert || props.active) {
+    classes.push('btn-invert')
   }
 
   // Size

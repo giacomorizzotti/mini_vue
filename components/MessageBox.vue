@@ -31,7 +31,7 @@ const hasMessages = computed(() => messages.value.length > 0)
 .message-box {
   position: fixed;
   bottom: 0;
-  z-index: 99;
+  z-index: 9999;
   width: 100vw;
   padding-top: calc(var(--padding) * 2);
   padding-bottom: calc(var(--padding) * 2);

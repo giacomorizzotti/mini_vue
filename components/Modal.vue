@@ -82,7 +82,7 @@ emit('loaded');
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 9999;
+  z-index: 999;
   display: flex;
   align-items: center;
   justify-content: center;
