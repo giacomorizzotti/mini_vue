@@ -1,25 +1,36 @@
 <script setup>
 import { ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/mini/stores/auth'
+import { useMessage } from '@/mini/composables/useMessage'
 import Container from '@/mini/components/Container.vue'
 import Boxes from '@/mini/components/Boxes.vue'
 import Box from '@/mini/components/Box.vue'
 import LoginForm from '@/mini/components/LoginForm.vue'
 
+const props = defineProps({
+  redirectRouteName: {
+    type: String,
+    default: 'home'
+  }
+})
+
 const username = ref('')
 const password = ref('')
 const router = useRouter()
-const route = useRoute()
 const authStore = useAuthStore()
+const { showDangerMessage } = useMessage()
 
 async function submitLogin() {
   if (authStore.isLoading) return
   const ok = await authStore.loginWithPassword(username.value, password.value)
-  if (ok) {
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/cards'
-    router.replace(redirect)
+  if (!ok) {
+    showDangerMessage(authStore.authError || 'Login failed')
+    return
   }
+  const query = router.currentRoute.value.query
+  const redirect = typeof query.redirect === 'string' ? query.redirect : { name: props.redirectRouteName }
+  router.replace(redirect)
 }
 </script>
 
@@ -35,7 +46,6 @@ async function submitLogin() {
           v-model:username="username"
           v-model:password="password"
           :is-loading="authStore.isLoading"
-          :error="authStore.authError"
           @submit="submitLogin"
         />
       </Box>

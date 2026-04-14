@@ -1,7 +1,6 @@
 <script setup>
 import Boxes from '@/mini/components/Boxes.vue'
 import Box from '@/mini/components/Box.vue'
-import Button from '@/mini/components/Button.vue'
 import Space from '@/mini/components/Space.vue'
 
 const props = defineProps({
@@ -16,10 +15,6 @@ const props = defineProps({
     isLoading: {
         type: Boolean,
         default: false
-    },
-    error: {
-        type: String,
-        default: ''
     },
     submitLabel: {
         type: String,
@@ -76,14 +71,11 @@ function onPasswordInput(event) {
                     @input="onPasswordInput"
                 />
             </Box>
-            <Box v-if="props.error" size="100">
-                <p class="bad-text S">{{ props.error }}</p>
-            </Box>
             <Space />
             <Box size="100">
-                <Button type="submit" :disabled="props.isLoading" @click.prevent="onSubmit">
+                <button type="submit" :disabled="props.isLoading">
                     {{ props.isLoading ? props.loadingLabel : props.submitLabel }}
-                </Button>
+                </button>
             </Box>
         </Boxes>
 
