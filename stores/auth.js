@@ -5,24 +5,28 @@ import {
     OAUTH_CLIENT_SECRET,
     OAUTH_SCOPE,
     OAUTH_TOKEN_ENDPOINT,
+    OAUTH_REVOKE_ENDPOINT,
     OAUTH_USERINFO_ENDPOINT,
 } from '@/config/auth'
+
+function generateCodeVerifier() {
+    const array = new Uint8Array(32)
+    crypto.getRandomValues(array)
+    return btoa(String.fromCharCode(...array))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+}
+
+async function generateCodeChallenge(verifier) {
+    const data = new TextEncoder().encode(verifier)
+    const digest = await crypto.subtle.digest('SHA-256', data)
+    return btoa(String.fromCharCode(...new Uint8Array(digest)))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+}
 
 const ACCESS_TOKEN_KEY = 'auth.accessToken'
 const REFRESH_TOKEN_KEY = 'auth.refreshToken'
 const EXPIRES_AT_KEY = 'auth.expiresAt'
 const USERINFO_KEY = 'auth.userInfo'
-const REFRESH_ENDPOINT_KEY = 'auth.refreshEndpoint'
-
-// Decode the `exp` claim from a JWT (milliseconds)
-function getJwtExp(token) {
-    try {
-        const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
-        return typeof payload.exp === 'number' ? payload.exp * 1000 : 0
-    } catch {
-        return 0
-    }
-}
 
 function readJsonFromStorage(key) {
     const raw = localStorage.getItem(key)
@@ -34,12 +38,23 @@ function readJsonFromStorage(key) {
     }
 }
 
+function tokenFormData(grantFields) {
+    const formData = new URLSearchParams()
+    for (const [key, value] of Object.entries(grantFields)) {
+        formData.set(key, value)
+    }
+    formData.set('client_id', OAUTH_CLIENT_ID)
+    if (OAUTH_CLIENT_SECRET) {
+        formData.set('client_secret', OAUTH_CLIENT_SECRET)
+    }
+    return formData
+}
+
 export const useAuthStore = defineStore('auth', () => {
     const accessToken = ref(localStorage.getItem(ACCESS_TOKEN_KEY) || '')
     const refreshToken = ref(localStorage.getItem(REFRESH_TOKEN_KEY) || '')
     const initialExpiresAt = Number(localStorage.getItem(EXPIRES_AT_KEY) || 0)
     const expiresAt = ref(Number.isFinite(initialExpiresAt) ? initialExpiresAt : 0)
-    const _refreshEndpoint = ref(localStorage.getItem(REFRESH_ENDPOINT_KEY) || OAUTH_TOKEN_ENDPOINT)
     const userInfo = ref(readJsonFromStorage(USERINFO_KEY))
     const isLoading = ref(false)
     const authError = ref('')
@@ -55,23 +70,10 @@ export const useAuthStore = defineStore('auth', () => {
         return { Authorization: `Bearer ${accessToken.value}` }
     })
 
-    function persistTokens({ accessTokenValue, refreshTokenValue, expiresInSeconds, refreshEndpoint }) {
+    function persistTokens({ accessTokenValue, refreshTokenValue, expiresInSeconds }) {
         accessToken.value = accessTokenValue || ''
         refreshToken.value = refreshTokenValue || ''
-
-        if (expiresInSeconds) {
-            expiresAt.value = Date.now() + Number(expiresInSeconds) * 1000
-        } else if (accessTokenValue) {
-            // Fall back to reading the exp claim directly from the JWT
-            expiresAt.value = getJwtExp(accessTokenValue)
-        } else {
-            expiresAt.value = 0
-        }
-
-        if (refreshEndpoint) {
-            _refreshEndpoint.value = refreshEndpoint
-            localStorage.setItem(REFRESH_ENDPOINT_KEY, refreshEndpoint)
-        }
+        expiresAt.value = expiresInSeconds ? Date.now() + Number(expiresInSeconds) * 1000 : 0
 
         localStorage.setItem(ACCESS_TOKEN_KEY, accessToken.value)
         localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken.value)
@@ -89,16 +91,13 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.removeItem(REFRESH_TOKEN_KEY)
         localStorage.removeItem(EXPIRES_AT_KEY)
         localStorage.removeItem(USERINFO_KEY)
-        localStorage.removeItem(REFRESH_ENDPOINT_KEY)
     }
 
-    async function fetchUserInfo(userInfoEndpoint = OAUTH_USERINFO_ENDPOINT) {
+    async function fetchUserInfo() {
         if (!accessToken.value) return null
 
-        const response = await fetch(userInfoEndpoint, {
-            headers: {
-                ...authHeaders.value,
-            },
+        const response = await fetch(OAUTH_USERINFO_ENDPOINT, {
+            headers: { ...authHeaders.value },
         })
 
         if (!response.ok) {
@@ -111,34 +110,21 @@ export const useAuthStore = defineStore('auth', () => {
         return payload
     }
 
-    async function resourceOwnerPasswordBased({
-        username,
-        password,
-        clientId = OAUTH_CLIENT_ID,
-        clientSecret = OAUTH_CLIENT_SECRET,
-        getTokenEndpoint = OAUTH_TOKEN_ENDPOINT,
-        userInfoEndpoint = OAUTH_USERINFO_ENDPOINT,
-        scope = OAUTH_SCOPE,
-    }) {
+    async function loginWithPassword(username, password) {
         authError.value = ''
         isLoading.value = true
 
         try {
-            const formData = new URLSearchParams()
-            formData.set('grant_type', 'password')
-            formData.set('username', username)
-            formData.set('password', password)
-            formData.set('scope', scope)
-            formData.set('client_id', clientId)
-            if (clientSecret) {
-                formData.set('client_secret', clientSecret)
-            }
+            const formData = tokenFormData({
+                grant_type: 'password',
+                username,
+                password,
+                scope: OAUTH_SCOPE,
+            })
 
-            const response = await fetch(getTokenEndpoint, {
+            const response = await fetch(OAUTH_TOKEN_ENDPOINT, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: formData.toString(),
             })
 
@@ -155,7 +141,7 @@ export const useAuthStore = defineStore('auth', () => {
                 expiresInSeconds: payload.expires_in,
             })
 
-            await fetchUserInfo(userInfoEndpoint).catch(() => null)
+            await fetchUserInfo().catch(() => null)
             return true
         } catch (error) {
             clearSession()
@@ -166,122 +152,41 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    async function loginWithPassword(username, password) {
-        return resourceOwnerPasswordBased({ username, password })
-    }
-
-    async function refreshAccessToken(
-        refreshEndpoint = OAUTH_TOKEN_ENDPOINT,
-        { useSimpleJwtCompat = true, clientId = OAUTH_CLIENT_ID, clientSecret = OAUTH_CLIENT_SECRET } = {},
-    ) {
+    // RFC 6749 §6 — form-encoded grant_type=refresh_token against the same
+    // OAuth2 token endpoint used for login (this server doesn't speak simplejwt).
+    async function refreshAccessToken() {
         if (!refreshToken.value) return false
 
-        let response
-        if (useSimpleJwtCompat) {
-            // Django simplejwt: POST JSON { refresh } → { access, refresh }
-            response = await fetch(refreshEndpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ refresh: refreshToken.value }),
-            })
-        } else {
-            // RFC 6749 §6: form-encoded grant_type=refresh_token
-            const formData = new URLSearchParams()
-            formData.set('grant_type', 'refresh_token')
-            formData.set('refresh_token', refreshToken.value)
-            formData.set('client_id', clientId)
-            if (clientSecret) formData.set('client_secret', clientSecret)
-            response = await fetch(refreshEndpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: formData.toString(),
-            })
-        }
+        const formData = tokenFormData({
+            grant_type: 'refresh_token',
+            refresh_token: refreshToken.value,
+        })
+
+        const response = await fetch(OAUTH_TOKEN_ENDPOINT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString(),
+        })
 
         const payload = await response.json().catch(() => ({}))
 
-        if (useSimpleJwtCompat) {
-            if (!response.ok || !payload.access) { clearSession(); return false }
-            persistTokens({
-                accessTokenValue: payload.access,
-                refreshTokenValue: payload.refresh || refreshToken.value,
-                expiresInSeconds: payload.expires_in,
-            })
-        } else {
-            if (!response.ok || !payload.access_token) { clearSession(); return false }
-            persistTokens({
-                accessTokenValue: payload.access_token,
-                refreshTokenValue: payload.refresh_token || refreshToken.value,
-                expiresInSeconds: payload.expires_in,
-            })
+        if (!response.ok || !payload.access_token) {
+            clearSession()
+            return false
         }
+
+        persistTokens({
+            accessTokenValue: payload.access_token,
+            refreshTokenValue: payload.refresh_token || refreshToken.value,
+            expiresInSeconds: payload.expires_in,
+        })
         return true
     }
 
-    // Django simplejwt-specific login: POST JSON { username, password } → { access, refresh }
-    // For standard OAuth2, use loginWithPassword() / resourceOwnerPasswordBased() instead.
-    async function loginSimpleJwt({ username, password, getTokenEndpoint = OAUTH_TOKEN_ENDPOINT, userInfoEndpoint = OAUTH_USERINFO_ENDPOINT }) {
-        authError.value = ''
-        isLoading.value = true
-
-        try {
-            const response = await fetch(getTokenEndpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password }),
-            })
-
-            const payload = await response.json().catch(() => ({}))
-
-            if (!response.ok || !payload.access) {
-                const message = payload.detail || payload.error || 'Invalid credentials'
-                throw new Error(message)
-            }
-
-            // Derive refresh endpoint from the obtain endpoint (simplejwt convention)
-            const derivedRefreshEndpoint = getTokenEndpoint.replace(/token\/?$/, 'token/refresh/')
-
-            persistTokens({
-                accessTokenValue: payload.access,
-                refreshTokenValue: payload.refresh,
-                expiresInSeconds: payload.expires_in,
-                refreshEndpoint: derivedRefreshEndpoint,
-            })
-
-            await fetchUserInfo(userInfoEndpoint).catch(() => null)
-            return true
-        } catch (error) {
-            clearSession()
-            authError.value = error instanceof Error ? error.message : 'Login failed'
-            return false
-        } finally {
-            isLoading.value = false
-        }
-    }
-
-    // Backward-compatible alias — prefer loginSimpleJwt() or loginWithPassword() explicitly
-    const login = loginSimpleJwt
-
-    // Django simplejwt-specific: POST JSON { token } to /api/token/verify/
-    async function deepVerifyToken(verifyEndpoint) {
-        if (!accessToken.value) return false
-        try {
-            const response = await fetch(verifyEndpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: accessToken.value }),
-            })
-            return response.ok
-        } catch {
-            return false
-        }
-    }
-
-    // RFC 7662 token introspection — works with any standards-compliant OAuth2 server
-    async function introspectToken(
-        introspectionEndpoint,
-        { clientId = OAUTH_CLIENT_ID, clientSecret = OAUTH_CLIENT_SECRET } = {},
-    ) {
+    // RFC 7662 token introspection — ask the auth server whether the current
+    // access token is still active. Pass the server's introspection endpoint
+    // (e.g. `${AUTH_SERVER_BASE}/o/introspect/`).
+    async function introspectToken(introspectionEndpoint, { clientId = OAUTH_CLIENT_ID, clientSecret = OAUTH_CLIENT_SECRET } = {}) {
         if (!accessToken.value) return false
         try {
             const formData = new URLSearchParams()
@@ -305,20 +210,109 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    async function ensureValidToken(refreshEndpoint = OAUTH_TOKEN_ENDPOINT) {
+    async function ensureValidToken() {
         if (!accessToken.value) return false
         if (!Number.isFinite(expiresAt.value) || expiresAt.value <= 0) return true
         if (Date.now() < expiresAt.value - 30000) return true
-        return refreshAccessToken(refreshEndpoint)
+        return refreshAccessToken()
     }
 
+    // RFC 7009 token revocation. Hint refresh_token specifically — the auth
+    // server's revoke_token endpoint cascades a refresh-token revocation to
+    // its access token, but revoking only the access token leaves the refresh
+    // token alive (able to silently mint new access tokens after "logout").
+    //
+    // Clear the local session first (synchronously) so isAuthenticated flips
+    // immediately — callers that navigate right after logout() shouldn't race
+    // a still-true isAuthenticated against a guestOnly router guard. The
+    // server-side revocation is then fired off best-effort in the background.
     function logout() {
+        const tokenToRevoke = refreshToken.value
         clearSession()
+
+        if (tokenToRevoke && OAUTH_REVOKE_ENDPOINT) {
+            const formData = tokenFormData({
+                token: tokenToRevoke,
+                token_type_hint: 'refresh_token',
+            })
+            fetch(OAUTH_REVOKE_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData.toString(),
+            }).catch(() => {})
+        }
+    }
+
+    async function initiateLogin(authorizeEndpoint, redirectUri) {
+        const verifier = generateCodeVerifier()
+        const challenge = await generateCodeChallenge(verifier)
+        const state = generateCodeVerifier()
+
+        sessionStorage.setItem('pkce_verifier', verifier)
+        sessionStorage.setItem('pkce_state', state)
+
+        const params = new URLSearchParams({
+            response_type: 'code',
+            client_id: OAUTH_CLIENT_ID,
+            redirect_uri: redirectUri,
+            scope: OAUTH_SCOPE,
+            code_challenge: challenge,
+            code_challenge_method: 'S256',
+            state,
+        })
+
+        window.location.href = `${authorizeEndpoint}?${params.toString()}`
+    }
+
+    async function handleCallback(code, redirectUri) {
+        authError.value = ''
+        isLoading.value = true
+        try {
+            const verifier = sessionStorage.getItem('pkce_verifier')
+            sessionStorage.removeItem('pkce_verifier')
+            sessionStorage.removeItem('pkce_state')
+
+            if (!verifier) throw new Error('Missing PKCE verifier')
+
+            const formData = new URLSearchParams({
+                grant_type: 'authorization_code',
+                code,
+                client_id: OAUTH_CLIENT_ID,
+                code_verifier: verifier,
+                redirect_uri: redirectUri,
+            })
+
+            const response = await fetch(OAUTH_TOKEN_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData.toString(),
+            })
+
+            const payload = await response.json().catch(() => ({}))
+
+            if (!response.ok || !payload.access_token) {
+                throw new Error(payload.error_description || payload.error || 'Token exchange failed')
+            }
+
+            persistTokens({
+                accessTokenValue: payload.access_token,
+                refreshTokenValue: payload.refresh_token,
+                expiresInSeconds: payload.expires_in,
+            })
+
+            await fetchUserInfo().catch(() => null)
+            return true
+        } catch (error) {
+            clearSession()
+            authError.value = error instanceof Error ? error.message : 'Login failed'
+            return false
+        } finally {
+            isLoading.value = false
+        }
     }
 
     async function authFetch(input, init = {}) {
-        const refreshEndpoint = _refreshEndpoint.value
-        const valid = await ensureValidToken(refreshEndpoint)
+        const valid = await ensureValidToken()
         if (!valid || !accessToken.value) {
             throw new Error('Not authenticated')
         }
@@ -331,9 +325,14 @@ export const useAuthStore = defineStore('auth', () => {
             headers: requestHeaders,
         })
 
-        // On 401, refresh once and retry
-        if (response.status === 401 && refreshToken.value) {
-            const refreshed = await refreshAccessToken(refreshEndpoint)
+        // On an auth failure, refresh once and retry. APIs are inconsistent
+        // about 401 vs 403 for an invalid/expired/revoked bearer token (DRF
+        // falls back to 403 when no WWW-Authenticate challenge is set), so
+        // treat both as "might need a fresh token" — if the refresh token is
+        // also dead, refreshAccessToken() clears the session, which flips
+        // isAuthenticated to false and the UI updates accordingly.
+        if ((response.status === 401 || response.status === 403) && refreshToken.value) {
+            const refreshed = await refreshAccessToken()
             if (refreshed) {
                 const retryHeaders = new Headers(init.headers || {})
                 retryHeaders.set('Authorization', `Bearer ${accessToken.value}`)
@@ -353,13 +352,11 @@ export const useAuthStore = defineStore('auth', () => {
         isLoading,
         authError,
         authHeaders,
-        login,            // alias for loginSimpleJwt — kept for backward compat
-        loginSimpleJwt,
         loginWithPassword,
-        resourceOwnerPasswordBased,
+        initiateLogin,
+        handleCallback,
         refreshAccessToken,
         ensureValidToken,
-        deepVerifyToken,
         introspectToken,
         fetchUserInfo,
         authFetch,

@@ -5,6 +5,9 @@ const emit = defineEmits(['click'])
 const props = defineProps({
   color: String,
   invert: Boolean,
+  rounded: Boolean,
+  smooth: Boolean,
+  hard: Boolean,
   active: Boolean,
   text: {
     type: String,
@@ -14,6 +17,12 @@ const props = defineProps({
   corners: String,
   type: String,
   toggle: Boolean,
+  // color shortcut booleans
+  info: Boolean,
+  success: Boolean,
+  warning: Boolean,
+  danger: Boolean,
+  bad: Boolean,
 })
 
 const isBeingClicked = ref(false)
@@ -70,13 +79,16 @@ const cornersClassMap = {
 const buttonClasses = computed(() => {
   const classes = ['btn']
 
-  // Color
-  if (props.color && colorClassMap[props.color]) {
-    classes.push(colorClassMap[props.color]+'-btn')
+  // Color — explicit prop takes precedence, then boolean shortcuts
+  const resolvedColor = props.color ||
+    (props.info ? 'info' : props.success ? 'success' : props.warning ? 'warning' : props.danger ? 'danger' : props.bad ? 'bad' : null)
+  if (resolvedColor && colorClassMap[resolvedColor]) {
+    classes.push(colorClassMap[resolvedColor] + '-btn')
     if (props.invert || props.active) {
-      classes.push(colorClassMap[props.color]+ '-btn-invert')
+      classes.push(colorClassMap[resolvedColor] + '-btn-invert')
     }
   } else if (props.invert || props.active) {
+    classes.pop('btn')
     classes.push('btn-invert')
   }
 
@@ -84,8 +96,10 @@ const buttonClasses = computed(() => {
   const sizeClass = props.size && sizeClassMap[props.size] ? sizeClassMap[props.size] : 'regular'
   classes.push(sizeClass)
 
-  // Corners
-  const cornerClass = props.corners && cornersClassMap[props.corners] ? cornersClassMap[props.corners] : 'smooth'
+  // Corners — explicit prop, then boolean shortcuts, then default smooth
+  const cornerClass = props.corners && cornersClassMap[props.corners]
+    ? cornersClassMap[props.corners]
+    : props.rounded ? 'round' : props.hard ? 'hard' : props.smooth ? 'smooth' : 'smooth'
   classes.push(cornerClass)
 
   // Clicked

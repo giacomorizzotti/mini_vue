@@ -1,5 +1,4 @@
 <script setup>
-import Box from '@/mini/components/Box.vue';
 import Button from '@/mini/components/Button.vue';
 
 const props = defineProps({
@@ -29,6 +28,7 @@ const emit = defineEmits(['update:currentPage'])
     <Button
       size="S"
       class="my-0 me-05"
+      invert
       :disabled="currentPage === 1"
       :class="currentPage === 1 ? 'light-grey-btn' : ''"
       @click="goToPage(1)"
@@ -38,16 +38,18 @@ const emit = defineEmits(['update:currentPage'])
     <Button
       size="S"
       class="m-0"
+      invert
       :disabled="currentPage === 1"
       :class="currentPage === 1 ? 'light-grey-btn' : ''"
       @click="goToPage(currentPage - 1)"
     >
       Previous
     </Button>
-    <p class="my-0 m-1 S grey-text">{{ currentPage }} of {{ totalPages }}</p>
+    <p class="my-0 m-1 S grey-text">{{ currentPage }} / {{ totalPages }}</p>
     <Button
       size="S"
       class="my-0 me-05"
+      invert
       :disabled="currentPage === totalPages"
       :class="currentPage === totalPages ? 'light-grey-btn' : ''"
       @click="goToPage(currentPage + 1)"
@@ -57,6 +59,7 @@ const emit = defineEmits(['update:currentPage'])
     <Button
       size="S"
       class="m-0"
+      invert
       :disabled="currentPage === totalPages"
       :class="currentPage === totalPages ? 'light-grey-btn' : ''"
       @click="goToPage(totalPages)"
