@@ -33,7 +33,11 @@ export { default as SubNavigation } from './SubNavigation.vue'
 export { default as Top } from './Top.vue'
 
 // UI Components
+export { default as Autocomplete } from './Autocomplete.vue'
+export { default as MultiAutocomplete } from './MultiAutocomplete.vue'
 export { default as Button } from './Button.vue'
+export { default as Collapsible } from './Collapsible.vue'
+export { default as TruncatedText } from './TruncatedText.vue'
 export { default as Loader } from './Loader.vue'
 export { default as LoadingBox } from './LoadingBox.vue'
 export { default as MessageBox } from './MessageBox.vue'

@@ -9,6 +9,10 @@ const props = defineProps({
   totalPages: {
     type: Number,
     required: true
+  },
+  size: {
+    type: String,
+    default: 'S'
   }
 })
 
@@ -26,7 +30,7 @@ const emit = defineEmits(['update:currentPage'])
 <template>
   <div class="pagination flex align-items-center" v-if="totalPages > 1">
     <Button
-      size="S"
+      :size="size"
       class="my-0 me-05"
       invert
       :disabled="currentPage === 1"
@@ -36,7 +40,7 @@ const emit = defineEmits(['update:currentPage'])
       First
     </Button>
     <Button
-      size="S"
+      :size="size"
       class="m-0"
       invert
       :disabled="currentPage === 1"
@@ -47,7 +51,7 @@ const emit = defineEmits(['update:currentPage'])
     </Button>
     <p class="my-0 m-1 S grey-text">{{ currentPage }} / {{ totalPages }}</p>
     <Button
-      size="S"
+      :size="size"
       class="my-0 me-05"
       invert
       :disabled="currentPage === totalPages"
@@ -57,7 +61,7 @@ const emit = defineEmits(['update:currentPage'])
       Next
     </Button>
     <Button
-      size="S"
+      :size="size"
       class="m-0"
       invert
       :disabled="currentPage === totalPages"

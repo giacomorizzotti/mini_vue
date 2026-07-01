@@ -29,6 +29,10 @@ const props = defineProps({
     type: [Boolean],
     default: false
   },
+  homeRouteName: {
+    type: [String],
+    default: 'home'
+  },
 })
 
 const DEFAULT_LOGO = 'https://mini.uwa.agency/img/brand/mini_emblem.svg'
@@ -63,7 +67,7 @@ const resolvedTitle = computed(() => {
 })
 
 const brandLinkComponent = computed(() => (router ? RouterLink : 'a'))
-const brandLinkProps = computed(() => (router ? { to: { name: 'home' } } : { href: resolveWithBaseUrl('/') }))
+const brandLinkProps = computed(() => (router ? { to: { name: props.homeRouteName } } : { href: resolveWithBaseUrl('/') }))
 
 const headerBrandClasses = computed(() => {
   const classes = [ 'p-0', scrollClass.value, menuStateClass.value ]

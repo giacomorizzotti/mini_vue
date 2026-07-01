@@ -1,0 +1,61 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## What this repo is
+
+`mini_vue` — a shared library of Vue 3 components, composables, directives, and two Pinia stores, consumed by multiple separate frontend projects (jpm, brff, and others) via filesystem symlink, not as a published npm package. Each consuming project symlinks this entire directory in as `<project>/frontend/src/mini` and resolves it through Vite's `@` alias with `preserveSymlinks: true` set in `vite.config.js` — there is no build step or `package.json` in this repo itself; it's raw source that gets compiled as part of whichever project imports it.
+
+There is no test suite, linter, or build command here — verification happens in the consuming project (`npm run build` there will surface any error in this code).
+
+## Critical: other consumers may be invisible to you
+
+This repo is symlinked into projects that may live on machines/servers you cannot see or grep. **Before removing or renaming anything that already exists here**, treat "no local consumers found" as inconclusive, not as proof of safety:
+
+- Purely **additive** changes (new component, new composable, a new optional prop with a default matching current behavior) are safe.
+- **Removing or renaming** an existing export, prop, emitted event, or CSS class needs real justification beyond "it looks unused" — the cost of leaving dead code in place is near zero; the cost of silently breaking an invisible consumer is a hard-to-trace regression on a server you can't check. If in doubt, ask before deleting.
+- This caution does not apply to anything created fresh within the same working session — there's no possible external consumer of code that didn't exist five minutes ago.
+- Watch for **over-fitting to one consumer's domain model**. Something can look generic while actually encoding one project's specific conventions (e.g. assuming items have particular field names/semantics). If a piece of code only makes sense given one project's business rules, it likely belongs in that project's own `src/composables`, not here.
+
+## Structure
+
+```
+components/     ~38 .vue components, barrel-exported from components/index.js
+composables/    composition functions, barrel-exported from composables/index.js
+directives/     imageCover.js
+stores/         two Pinia stores: auth.js, config.js
+views/          LoginView.vue
+pages/          CookiePolicy.vue, PrivacyPolicy.vue
+```
+
+Every new component/composable must be added to its directory's `index.js` barrel export, or consuming projects importing from `@/mini/components`/`@/mini/composables` won't see it.
+
+### Components (by rough category)
+
+- **Layout**: `Aside`, `Box`, `Boxes`, `Container`, `Section`, `Sep`, `Space`, `Sheet`, `Top`
+- **Navigation**: `Menu`, `MenuToggle`, `DropdownMenu`, `PageMenu`, `HeaderBrand`, `HeaderMenu`, `Header`, `FooterLogo`, `FooterCopy`, `Footer`
+- **Forms/pickers**: `Autocomplete` (single-select, type-to-filter), `MultiAutocomplete` (same pattern, array `modelValue` + removable chips) — deliberately separate components rather than one with a `multiple` flag, since selection behavior (replace vs. append+remove) differs enough to warrant it; `LoginForm`, `GDPR`, `ConfirmDialog` (promise-based confirm dialog)
+- **Overlays**: `Modal` (Esc/click-outside/scroll-lock), `SubNavigation` (a heavier sliding panel supporting 1-3 nesting `layer`s — see its own internal comments for the pointer-events/scroll-locking mechanics, which are non-obvious)
+- **Display**: `TruncatedText` (show more/less for long text), `MessageBox`, `LoadingBox`, `Loader`, `StarsBackground`, `Credits`, `Actions`, `Collapsible`
+- **Pagination**: `Pagination`, `PaginatedList`
+
+### Composables
+
+- **Persistence/sharing**: `usePersistedRef(key, default)` (localStorage-backed, same-key calls share one ref — so two mounted copies of the same entity stay in sync) and `useSharedRef(key, default)` (same sharing, but session-only, not persisted). Both keep a module-level `Map` cache keyed by string.
+- **Generic UI mechanics**: `useScrollAnchor(elRef)` — wraps a DOM-mutating action so the viewport doesn't visibly jump if that action shrinks the page enough for the browser to clamp scroll position.
+- **Data fetching**: `useApiList(url, authFetch, options)` — generic DRF-style paginated list loader, follows `next` links, returns `{ items, loading, hasError, refresh }`.
+- **Browser/device**: `useMobileDetection`, `useScrollDetection`, `useScrollState`, `useCookies`, `useClassManipulation`, `useImageCover`, `useWebsiteSettings`, `useMenuState`.
+- **Misc UI**: `useMessage` (notification state), `useColorContrast` (pick readable text color against a background), `useDateFormat` (`formatDate`/`formatTime`/`formatDuration`, plus `toDateKey`/`fromDateKey`/`toDatetimeLocal`/`fromDatetimeLocal` for round-tripping a Date through native date/datetime-local input values and URL-param-style date keys — `toDateKey`/`fromDateKey` are also exported standalone, not just via the composable, since `useWeekNavigation` needs `toDateKey` without invoking the whole composable for one pure function. `fromDateKey`/`fromDatetimeLocal` are the inverses of `toDateKey`/`toDatetimeLocal`: `fromDateKey` parses a 'YYYY-MM-DD' string back into a local-midnight Date — e.g. for restoring state from a URL query param — and `fromDatetimeLocal` parses a datetime-local input's local-time string into a UTC ISO string before sending it to an API, so a server in a different default timezone doesn't misinterpret it).
+- **Calendars/scheduling**: `useWeekNavigation()` — reactive Monday-Sunday week cursor (`weekStart`, `weekDays`, `weekRangeLabel`, `weekNumber` (ISO 8601), `shiftWeek(delta)`, `goToCurrentWeek()`, `goToWeek(date)` (jumps to the Monday-Sunday week containing an arbitrary date, e.g. one restored from a URL query param)) for any week-at-a-time UI. Extracted from jpm's Times page (a week-agenda view) — pure date math, no domain assumptions; no router dependency of its own, so a consumer that wants the visible week reflected in the URL wires that up itself (see jpm's `Times.vue`: watches `weekStart`, writes `?week=` via `router.replace`, restores via `fromDateKey(route.query.week)` + `goToWeek()` on load). `useTimeGrid({startHour, endHour, slotMinutes})` — geometry for a vertical hour track (`hourMarks`, `minutesToPercent`/`durationToPercent` for absolute positioning, `snapMinutes`, `minutesToTimeLabel`), operating purely in minutes-since-midnight. Three Pointer Events drag composables share that same track (mouse/touch/pen all handled by one listener set) — each takes a `getContainer` *function* (not a ref directly — a ref passed down as a prop gets auto-unwrapped by the template compiler, losing its live binding) returning the track element, and each returns `{previewRange, onPointerDown}`, `previewRange` being the live in-progress range to render as feedback while dragging: `useDragToCreate(getContainer, options)` (a near-zero-movement click still creates a default-length block rather than a zero-length one); `useDragToMove(getContainer, {getRange, onMove, onClick})` (drag an existing block to shift its time-of-day, duration preserved; a negligible-movement press fires `onClick` instead, so one listener covers both "view this" and "drag this" without a racing native `click`); `useDragToResize(getContainer, {getRange, onResize})` (drag a block's end-edge to change its duration, start fixed). All three clamp to the track's own range — no cross-day dragging. `layoutOverlapping(items, getStartMinutes, getEndMinutes)` — pure function, assigns `{column, columnCount}` to overlapping items so a calendar grid can render them side-by-side instead of stacked. All extracted from jpm's hourly week-grid Times view; none know about TimeEntry/Project or any other domain concept, only generic minute ranges.
+
+### Stores
+
+- `stores/auth.js` — full PKCE OAuth2 flow (code verifier/challenge generation, token storage in localStorage, `authFetch` wrapper). **Expects the consuming project to provide `@/config/auth`** exporting `OAUTH_CLIENT_ID`, `OAUTH_CLIENT_SECRET`, `OAUTH_SCOPE`, `OAUTH_TOKEN_ENDPOINT`, `OAUTH_REVOKE_ENDPOINT`, `OAUTH_USERINFO_ENDPOINT` — this is an implicit contract, not enforced by this repo.
+- `stores/config.js` — app config store.
+
+## Design conventions (from the original README, still accurate)
+
+- No inline styles in components — styling goes through the consuming project's `mini.css` (from `/home/projects/mini/css/`), not scoped `<style>` blocks with hardcoded values.
+- Composable-first: logic extracted into composables rather than duplicated across components.
+- Components compose other mini components (`Box`, `Button`, `Modal`, etc.) rather than reimplementing layout primitives.
+- Single barrel `index.js` per directory — components stay in individual `.vue` files (required for SFC template syntax), composables are plain `.js`.

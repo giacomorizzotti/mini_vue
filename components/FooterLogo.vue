@@ -8,12 +8,16 @@
     width: {
       type: [String],
       default: '100%'
+    },
+    homeRouteName: {
+      type: [String],
+      default: 'home'
     }
   })
 </script>
 
 <template>
-  <router-link :to="{ name: 'home' }" class=""><img v-if="logo" :src="logo" class="img logo m-auto" alt="logo" :style="{ maxWidth: width + '!important' }"/></router-link>
+  <router-link :to="{ name: homeRouteName }" class=""><img v-if="logo" :src="logo" class="img logo m-auto" alt="logo" :style="{ maxWidth: width + '!important' }"/></router-link>
 </template>
 
 <style lang="scss" scoped>

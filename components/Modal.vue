@@ -60,19 +60,21 @@ emit('loaded');
 </script>
 
 <template>
-    <Container v-show="visible" fw class="modal-box full-page-container">
-        <div id="black-layer"></div>
-        <Boxes id="click-to-hide-layer" fh class="justify-content-center align-items-center z-top" @click="handleLayerClick">
-            <Box :size="50" padding="2" background="white" class="b-rad-10 box-shadow modal-content-wrapper">
-                <p class="m-0 right" style="position: absolute; right: calc( var(--margin) * 1.5 ); top: calc( var(--margin) * 1.5 ); z-index:9;">
-                    <a class="pointer black-text">
-                        <XmarkCircle width="32px" height="32px" class="m-0" @click="emit('close');" style="background-color: var(--white); border-radius: 50%; box-shadow: 0 0 5px 5px var(--white)"/>
-                    </a>
-                </p>
-                <slot/>
-            </Box>
-        </Boxes>
-    </Container>
+    <Teleport to="body">
+        <Container v-show="visible" fw class="modal-box full-page-container">
+            <div id="black-layer"></div>
+            <Boxes id="click-to-hide-layer" fh class="justify-content-center align-items-center z-top" @click="handleLayerClick">
+                <Box :size="50" padding="2" background="white" class="b-rad-10 box-shadow modal-content-wrapper">
+                    <p class="m-0 right" style="position: absolute; right: calc( var(--margin) * 1.5 ); top: calc( var(--margin) * 1.5 ); z-index:9;">
+                        <a class="pointer black-text">
+                            <XmarkCircle width="32px" height="32px" class="m-0" @click="emit('close');" style="background-color: var(--white); border-radius: 50%; box-shadow: 0 0 5px 5px var(--white)"/>
+                        </a>
+                    </p>
+                    <slot/>
+                </Box>
+            </Boxes>
+        </Container>
+    </Teleport>
 </template>
 
 <style lang="scss" scoped>
@@ -82,7 +84,7 @@ emit('loaded');
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 999;
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;

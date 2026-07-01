@@ -58,13 +58,12 @@ const processedMenuClose = () => {
 
 <template>
   <nav class="menu" :class="menuStateClass">
-    <ul class="menu" :class="directionClass">
+    <ul class="menu" :class="directionClass" @click="processedMenuClose">
       <li v-if="menuItems" v-for="item in visibleMenuItems" :key="item.routeName || item.link || item.title" class="item">
-        <router-link 
+        <router-link
           :to="{ name: item.routeName }"
           :href="item.link"
-          :target="item.target" 
-          @click="processedMenuClose"
+          :target="item.target"
         >{{ item.title }}</router-link>
       </li>
       <slot v-else/>

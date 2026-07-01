@@ -15,7 +15,13 @@ const props = defineProps({
   size: [Number, String],
   link: String,
   corners: String,
-  type: String,
+  // Defaults to 'button' so a Button with no `link` (rendered as a real
+  // <button>) never falls back to the native default of type="submit",
+  // which would submit an enclosing form on click.
+  type: {
+    type: String,
+    default: 'button',
+  },
   toggle: Boolean,
   // color shortcut booleans
   info: Boolean,
@@ -84,12 +90,23 @@ const buttonClasses = computed(() => {
     (props.info ? 'info' : props.success ? 'success' : props.warning ? 'warning' : props.danger ? 'danger' : props.bad ? 'bad' : null)
   if (resolvedColor && colorClassMap[resolvedColor]) {
     classes.push(colorClassMap[resolvedColor] + '-btn')
-    if (props.invert || props.active) {
-      classes.push(colorClassMap[resolvedColor] + '-btn-invert')
+    if (props.active) {
+      classes.push(colorClassMap[resolvedColor] + '-btn-active')
+    } else {
+      if (props.invert) {
+        classes.push(colorClassMap[resolvedColor] + '-btn-invert')
+      }
     }
-  } else if (props.invert || props.active) {
-    classes.pop('btn')
-    classes.push('btn-invert')
+  } else {
+    if (props.active) {
+      classes.pop('btn')
+      classes.push('btn-active')
+    } else {
+      if (props.invert) {
+        classes.pop('btn')
+        classes.push('btn-invert')
+      }
+    }
   }
 
   // Size
@@ -112,17 +129,24 @@ const buttonClasses = computed(() => {
 
   return classes
 })
+
+// With a `link`, render a real anchor (navigates); without one, render a
+// real <button> (an action that does nothing on its own) instead of an
+// <a> with no href, which isn't keyboard/semantically correct and made
+// the `type` prop meaningless.
+const tag = computed(() => (props.link ? 'a' : 'button'))
 </script>
 
 <template>
-<a
+<component
+  :is="tag"
   :href="props.link"
   :class="buttonClasses"
   :type="props.type"
   @click="handleClick"
 >
   <slot/>{{ props.text }}
-</a>
+</component>
 </template>
 
 <style lang="scss" scoped>

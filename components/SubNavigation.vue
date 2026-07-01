@@ -5,8 +5,17 @@ import Boxes from '@/mini/components/Boxes.vue';
 import Box from '@/mini/components/Box.vue';
 import { XmarkCircle } from '@iconoir/vue'
 
-const props = defineProps({ visible: Boolean })
+const props = defineProps({
+  visible: Boolean,
+  // Nesting depth (1-3): each level renders narrower than the last, so an
+  // outer panel stays visible behind an inner one. Only layer 1 draws the
+  // dark backdrop — nested layers sit on top of the same one.
+  layer: { type: Number, default: 1 },
+})
 const emit = defineEmits(['close', 'loaded'])
+
+const rootEl = ref(null)
+let lockedAncestor = null
 
 const closeModal = () => {
   emit('close')
@@ -15,9 +24,6 @@ const closeModal = () => {
 // Close subnav on Esc key
 const handleKeydown = (e) => {
   if (e.key === 'Escape') closeModal()
-}
-const handleLayerClick = (e) => {
-  if (e.target.id === 'click-to-hide-layer') closeModal()
 }
 
 // Prevent body scroll when subnav is open
@@ -31,11 +37,33 @@ const restoreBodyScroll = () => {
   document.body.style.position = ''
   document.body.style.width = ''
 }
+
+// While this panel is open, the panel it's nested inside (its nearest
+// ancestor's own scrollable card) should sit scrolled to the top and not
+// scroll any further — it's only ever partially visible behind this one,
+// so letting it keep scrolling underneath would be disorienting. Walking
+// up the DOM (rather than coordinating via props) keeps this generic for
+// any nesting depth: each layer only ever has to lock the one behind it.
+const lockAncestorScroll = () => {
+  const ancestor = rootEl.value?.$el?.closest('.subnav-content-wrapper')
+  if (!ancestor) return
+  lockedAncestor = ancestor
+  ancestor.scrollTop = 0
+  ancestor.style.overflow = 'hidden'
+}
+const unlockAncestorScroll = () => {
+  if (!lockedAncestor) return
+  lockedAncestor.style.overflow = ''
+  lockedAncestor = null
+}
+
 watch(() => props.visible, (newVisible) => {
   if (newVisible) {
     preventBodyScroll()
+    lockAncestorScroll()
   } else {
     restoreBodyScroll()
+    unlockAncestorScroll()
   }
 })
 
@@ -43,12 +71,14 @@ onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
   if (props.visible) {
     preventBodyScroll()
+    lockAncestorScroll()
   }
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown)
   restoreBodyScroll()
+  unlockAncestorScroll()
 })
 
 emit('loaded');
@@ -56,20 +86,115 @@ emit('loaded');
 </script>
 
 <template>
-    <Container v-show="visible" fw class="subnav-box full-page-container">
-        <div id="black-layer"></div>
-        <Boxes id="click-to-hide-layer" fh class="justify-content-end align-items-end z-3" @click="handleLayerClick">
-            <Box padding="2" background="white" class="box-shadow subnav-content-wrapper">
-                <p class="m-0 right" style="position: absolute; right: calc( var(--margin) * 1.5 ); top: calc( var(--margin) * 1.5 );">
-                    <a class="pointer black-text">
-                        <XmarkCircle width="32px" height="32px" class="m-0" @click="emit('close');" style="background-color: var(--white); border-radius: 50%; box-shadow: 0 0 5px 5px var(--white)"/>
-                    </a>
-                </p>
-                <slot/>
-            </Box>
-        </Boxes>
-    </Container>
+    <Transition name="subnav-slide">
+        <Container ref="rootEl" v-show="visible" fw class="subnav-box full-page-container" :class="`subnav-layer-${layer}`">
+            <div v-if="layer === 1" id="black-layer"></div>
+            <Boxes id="click-to-hide-layer" fh class="justify-content-start align-items-start z-3">
+                <Box padding="2" background="white" class="ps-4 pe-5 box-shadow subnav-content-wrapper">
+                    <p class="m-0 right" style="position: absolute; right: calc( var(--margin) * 1.5 ); top: calc( var(--margin) * 1.5 );">
+                        <a class="pointer black-text">
+                            <XmarkCircle width="32px" height="32px" class="m-0" @click="emit('close');" style="background-color: var(--white); border-radius: 50%; box-shadow: 0 0 5px 5px var(--white)"/>
+                        </a>
+                    </p>
+                    <slot/>
+                </Box>
+            </Boxes>
+        </Container>
+    </Transition>
 </template>
 
 <style lang="scss" scoped>
+.subnav-box.full-page-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 999;
+}
+
+#black-layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 1;
+}
+
+#click-to-hide-layer {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  // This flex wrapper always spans the full viewport, even though a
+  // narrower nested layer's visible card doesn't — without this, the
+  // empty space beside a nested card would sit on top of whatever's
+  // underneath (e.g. an outer layer's close button) and swallow clicks
+  // meant for it. The card re-enables pointer events for itself below.
+  pointer-events: none;
+}
+
+.subnav-content-wrapper {
+  height: 100vh;
+  width: 90vw;
+  pointer-events: auto;
+  overflow-y: auto;
+  @media screen and (min-width: 768px) {
+    width: 85vw;
+  }
+}
+
+.subnav-layer-2 .subnav-content-wrapper {
+  width: 80vw;
+  @media screen and (min-width: 768px) {
+    width: 80vw;
+  }
+}
+
+.subnav-layer-3 .subnav-content-wrapper {
+  width: 70vw;
+  @media screen and (min-width: 768px) {
+    width: 75vw;
+  }
+}
+
+// `pointer-events: none` on #click-to-hide-layer alone isn't enough: its
+// own parent (.full-page-container) still covers the full viewport and
+// still has the default `auto`, so it just catches the click itself
+// instead of letting it fall through to whatever's underneath (an outer
+// layer's close button). Disabling pointer events on the whole nested
+// layer's container — not layer 1's, which still needs to swallow clicks
+// on its own backdrop — lets the inherited `none` reach all the way down,
+// with `.subnav-content-wrapper`'s `auto` opting the visible card back in.
+.subnav-layer-2.full-page-container,
+.subnav-layer-3.full-page-container {
+  pointer-events: none;
+}
+
+.z-top {
+  z-index: 10;
+}
+
+// Panel slides in/out left-to-right; backdrop just fades, since
+// transitioning `display` itself (what v-show toggles) isn't animatable —
+// Vue's <Transition> defers that flip until these classes finish.
+.subnav-slide-enter-active .subnav-content-wrapper,
+.subnav-slide-leave-active .subnav-content-wrapper {
+  transition: transform 0.3s ease;
+}
+.subnav-slide-enter-from .subnav-content-wrapper,
+.subnav-slide-leave-to .subnav-content-wrapper {
+  transform: translateX(-100%);
+}
+
+.subnav-slide-enter-active #black-layer,
+.subnav-slide-leave-active #black-layer {
+  transition: opacity 0.3s ease;
+}
+.subnav-slide-enter-from #black-layer,
+.subnav-slide-leave-to #black-layer {
+  opacity: 0;
+}
 </style>

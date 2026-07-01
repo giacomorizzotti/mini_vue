@@ -44,7 +44,6 @@ function clearAllMessages() {
   right: 0;
   z-index: 9999;
   padding: calc(var(--padding) * 2);
-  background: linear-gradient(-25deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 50%);
   max-height: calc(100vh - (var(--menu-toggle-height) + var(--padding) * 2));
   width: 100vw;
   min-width: 100vw;
