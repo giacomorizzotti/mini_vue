@@ -6,11 +6,17 @@ const props = defineProps({
 		type: [Number, String],
 		default: 100
 	},
+	height: {
+		type: [Number, String],
+		default: 100
+	},
 })
+
+const heightStyle = typeof props.height === 'number' ? `${props.height}px` : props.height
 </script>
 
 <template>
-  <Box :size="props.size" padding="0" style="height: 100px" class="relative">
+  <Box :size="props.size" padding="0" :style="{ height: heightStyle }" class="relative">
 	<div class="loading-box b-rad-10"></div>
   </Box>
 </template>

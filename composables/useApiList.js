@@ -13,8 +13,8 @@ export function useApiList(url, authFetch, { immediate = true } = {}) {
   const loading = ref(immediate)
   const hasError = ref(false)
 
-  async function refresh() {
-    loading.value = true
+  async function refresh(silent = false) {
+    if (!silent) loading.value = true
     hasError.value = false
     try {
       const results = []

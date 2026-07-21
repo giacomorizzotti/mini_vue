@@ -1,5 +1,11 @@
+<script>
+// Module-level key so every SubNavigation instance — regardless of nesting depth —
+// shares the same injection symbol when looking up the nearest parent's registry.
+const SUBNAV_CLOSE_REGISTRY = Symbol('subnav-close')
+</script>
+
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, provide, inject } from 'vue'
 import Container from '@/mini/components/Container.vue';
 import Boxes from '@/mini/components/Boxes.vue';
 import Box from '@/mini/components/Box.vue';
@@ -57,40 +63,82 @@ const unlockAncestorScroll = () => {
   lockedAncestor = null
 }
 
+// Body scroll is a global resource — only the outermost layer (1) locks
+// and unlocks it. Nested layers lock only their direct ancestor's scroll.
 watch(() => props.visible, (newVisible) => {
-  if (newVisible) {
-    preventBodyScroll()
-    lockAncestorScroll()
-  } else {
-    restoreBodyScroll()
-    unlockAncestorScroll()
+  if (props.layer === 1) {
+    if (newVisible) preventBodyScroll()
+    else restoreBodyScroll()
   }
+  if (newVisible) lockAncestorScroll()
+  else unlockAncestorScroll()
 })
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
   if (props.visible) {
-    preventBodyScroll()
+    if (props.layer === 1) preventBodyScroll()
     lockAncestorScroll()
   }
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown)
-  restoreBodyScroll()
+  if (props.layer === 1) restoreBodyScroll()
   unlockAncestorScroll()
 })
 
 emit('loaded');
 
+// --- Backdrop click: close only the innermost open layer ---
+//
+// Each SubNavigation provides a registry so its direct child can register its
+// closeModal function. When the backdrop (layer 1's #black-layer) is clicked,
+// handleBackdropClick calls the registered child's handler if one exists —
+// closing only the innermost layer — or its own closeModal if none is registered.
+// Children register/unregister themselves via the parent's injected registry
+// whenever their visible prop changes.
+
+const childCloseHandler = ref(null)
+provide(SUBNAV_CLOSE_REGISTRY, {
+  // Close any open sibling before accepting the new child — enforces
+  // "at most one visible child" so the backdrop chain stays consistent.
+  register: (fn) => { childCloseHandler.value?.(); childCloseHandler.value = fn },
+  unregister: (fn) => { if (childCloseHandler.value === fn) childCloseHandler.value = null },
+})
+
+// Each layer registers its own handleBackdropClick (not closeModal) with the parent.
+// This creates a delegation chain: backdrop click on layer 1 → layer 2's
+// handleBackdropClick → layer 3's handleBackdropClick → layer 3 has no child →
+// closes itself. Only the deepest open layer closes per click.
+const handleBackdropClick = () => {
+  if (childCloseHandler.value) childCloseHandler.value()
+  else closeModal()
+}
+
+const parentRegistry = inject(SUBNAV_CLOSE_REGISTRY, null)
+
+watch(() => props.visible, (visible) => {
+  if (!parentRegistry) return
+  if (visible) parentRegistry.register(handleBackdropClick)
+  else parentRegistry.unregister(handleBackdropClick)
+})
+
+onMounted(() => {
+  if (props.visible && parentRegistry) parentRegistry.register(handleBackdropClick)
+})
+
+onUnmounted(() => {
+  if (parentRegistry) parentRegistry.unregister(handleBackdropClick)
+})
 </script>
 
 <template>
-    <Transition name="subnav-slide">
+    <Transition name="subnav-slide" appear>
         <Container ref="rootEl" v-show="visible" fw class="subnav-box full-page-container" :class="`subnav-layer-${layer}`">
-            <div v-if="layer === 1" id="black-layer"></div>
+            <div v-if="layer === 1" id="black-layer" @click="handleBackdropClick()"></div>
             <Boxes id="click-to-hide-layer" fh class="justify-content-start align-items-start z-3">
-                <Box padding="2" background="white" class="ps-4 pe-5 box-shadow subnav-content-wrapper">
+                <Box padding="2" background="white" class="ps-2 pe-5 box-shadow subnav-content-wrapper">
                     <p class="m-0 right" style="position: absolute; right: calc( var(--margin) * 1.5 ); top: calc( var(--margin) * 1.5 );">
                         <a class="pointer black-text">
                             <XmarkCircle width="32px" height="32px" class="m-0" @click="emit('close');" style="background-color: var(--white); border-radius: 50%; box-shadow: 0 0 5px 5px var(--white)"/>
@@ -147,14 +195,14 @@ emit('loaded');
 }
 
 .subnav-layer-2 .subnav-content-wrapper {
-  width: 80vw;
+  width: 82.5vw;
   @media screen and (min-width: 768px) {
     width: 80vw;
   }
 }
 
 .subnav-layer-3 .subnav-content-wrapper {
-  width: 70vw;
+  width: 75vw;
   @media screen and (min-width: 768px) {
     width: 75vw;
   }

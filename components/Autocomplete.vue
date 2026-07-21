@@ -63,6 +63,26 @@ function handleKeydown(event) {
   }
 }
 
+function handleBlur() {
+  // @mousedown.prevent on each <li> keeps focus on the input when the user
+  // clicks a dropdown option, so blur only fires when focus truly leaves the
+  // component (tab, click Save, click elsewhere). At that point either
+  // auto-select an exact match or clear unconfirmed text so the field
+  // accurately reflects whether an option is actually selected.
+  if (!selectedOption.value) {
+    const exactMatch = props.options.find(
+      o => o.label.toLowerCase() === query.value.trim().toLowerCase()
+    )
+    if (exactMatch) {
+      emit('update:modelValue', exactMatch.id)
+      query.value = exactMatch.label
+    } else {
+      query.value = ''
+    }
+  }
+  isOpen.value = false
+}
+
 function handleClickOutside(event) {
   if (rootEl.value && !rootEl.value.contains(event.target)) {
     isOpen.value = false
@@ -82,10 +102,11 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
       autocomplete="off"
       @input="handleInput"
       @focus="isOpen = true"
+      @blur="handleBlur"
       @keydown="handleKeydown"
     />
     <ul v-if="isOpen && filteredOptions.length" class="autocomplete-options">
-      <li v-for="option in filteredOptions" :key="option.id" @click="selectOption(option)">
+      <li v-for="option in filteredOptions" :key="option.id" @mousedown.prevent @click="selectOption(option)">
         {{ option.label }}
       </li>
     </ul>

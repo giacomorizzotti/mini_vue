@@ -1,24 +1,24 @@
 <template>
-  <Modal :visible="isVisible" @close="cancel">
+  <Modal :visible="isVisible" :z-index="1100" @close="cancel">
     <Boxes>
-      <Box :size="100" v-if="title">
-        <h3 class="m-0">{{ title }}</h3>
+      <Box :size="100" v-if="currentTitle">
+        <h3 class="m-0">{{ currentTitle }}</h3>
       </Box>
       <Box :size="100">
-        <p>{{ message }}</p>
+        <p>{{ currentMessage }}</p>
       </Box>
       <Box :size="100" class="right">
-        <Button 
+        <Button
           color="grey"
           @click="cancel"
         >
-          {{ cancelText }}
+          {{ currentCancelText }}
         </Button>
-        <Button 
+        <Button
           color="main-color"
           @click="confirm"
         >
-          {{ confirmText }}
+          {{ currentConfirmText }}
         </Button>
       </Box>
     </Boxes>
@@ -56,7 +56,17 @@ const emit = defineEmits(['confirm', 'cancel'])
 const isVisible = ref(false)
 const resolvePromise = ref(null)
 
-const show = () => {
+const currentMessage = ref(props.message)
+const currentTitle = ref(props.title)
+const currentConfirmText = ref(props.confirmText)
+const currentCancelText = ref(props.cancelText)
+
+// Options passed to show() override the static props for that one call.
+const show = (options = {}) => {
+  currentMessage.value = options.message ?? props.message
+  currentTitle.value = options.title ?? props.title
+  currentConfirmText.value = options.confirmText ?? props.confirmText
+  currentCancelText.value = options.cancelText ?? props.cancelText
   isVisible.value = true
   return new Promise((resolve) => {
     resolvePromise.value = resolve

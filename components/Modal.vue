@@ -5,7 +5,10 @@ import Boxes from '@/mini/components/Boxes.vue';
 import Box from '@/mini/components/Box.vue';
 import { XmarkCircle } from '@iconoir/vue'
 
-const props = defineProps({ visible: Boolean })
+const props = defineProps({
+  visible: Boolean,
+  zIndex: { type: Number, default: 1000 },
+})
 const emit = defineEmits(['close', 'loaded'])
 
 const closeModal = () => {
@@ -61,7 +64,7 @@ emit('loaded');
 
 <template>
     <Teleport to="body">
-        <Container v-show="visible" fw class="modal-box full-page-container">
+        <Container v-if="visible" fw class="modal-box full-page-container" :style="{ zIndex: zIndex }">
             <div id="black-layer"></div>
             <Boxes id="click-to-hide-layer" fh class="justify-content-center align-items-center z-top" @click="handleLayerClick">
                 <Box :size="50" padding="2" background="white" class="b-rad-10 box-shadow modal-content-wrapper">
