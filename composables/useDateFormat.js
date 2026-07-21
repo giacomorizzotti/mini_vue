@@ -46,7 +46,6 @@ function formatTime(value) {
  * @returns {string}
  */
 function formatDuration(totalMinutes) {
-  if (totalMinutes <= 0) return '—'
   const hours = Math.floor(totalMinutes / 60)
   const minutes = totalMinutes % 60
   if (hours === 0) return `${minutes}m`
@@ -118,9 +117,40 @@ function fromDatetimeLocal(value) {
 }
 
 /**
+ * Format how long ago a date was as "5 minutes ago", "3 hours ago", "2 days
+ * ago", etc., falling back to `formatDate` beyond a month since "N months
+ * ago" gets imprecise. Returns '' for empty/invalid input, "just now" for
+ * anything under a minute, and treats a future date as "just now" too
+ * (e.g. small clock drift between client and server).
+ * @param {string|Date} value
+ * @returns {string}
+ */
+function formatTimeAgo(value) {
+  if (!value) return ''
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
+  if (seconds < 60) return 'just now'
+
+  const units = [
+    ['year', 31536000],
+    ['month', 2592000],
+    ['day', 86400],
+    ['hour', 3600],
+    ['minute', 60],
+  ]
+  for (const [name, secondsInUnit] of units) {
+    const count = Math.floor(seconds / secondsInUnit)
+    if (count >= 1) return `${count} ${name}${count === 1 ? '' : 's'} ago`
+  }
+  return 'just now'
+}
+
+/**
  * Composable for formatting dates consistently across the app.
  * @returns {Object} Date formatting utilities
  */
 export function useDateFormat() {
-  return { formatDate, formatTime, formatDuration, toDateKey, fromDateKey, toDatetimeLocal, fromDatetimeLocal }
+  return { formatDate, formatTime, formatDuration, formatTimeAgo, toDateKey, fromDateKey, toDatetimeLocal, fromDatetimeLocal }
 }
