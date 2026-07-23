@@ -20,7 +20,6 @@ const props = defineProps({
   }
 })
 
-
 const headerMenuClasses = computed(() => {
   const classes = [ 'p-0', scrollClass.value, menuStateClass.value ]
   if (props.invert === true) classes.push("invert")
@@ -29,12 +28,22 @@ const headerMenuClasses = computed(() => {
   return classes
 })
 
+
+const headerMenuPresence = computed(() => {
+  const sections = document.querySelectorAll('section.page-menu')
+  if (sections.length > 0) {
+    return true
+  } else {
+    return false
+  }
+})
+
 </script>
 
 <template>
   <Box id="head-menus" :class="headerMenuClasses">
     <Boxes class="g-0 align-items-center">
-      <Box id="header-menu-box md">
+      <Box v-if="headerMenuPresence" id="header-menu-box md">
         <Menu id="page-menu" :invert="props.invert"/>
       </Box>
       <Box>

@@ -22,6 +22,7 @@ const emit = defineEmits(['close', 'loaded'])
 
 const rootEl = ref(null)
 let lockedAncestor = null
+let savedScrollY = 0
 
 const closeModal = () => {
   emit('close')
@@ -32,16 +33,22 @@ const handleKeydown = (e) => {
   if (e.key === 'Escape') closeModal()
 }
 
-// Prevent body scroll when subnav is open
+// Prevent body scroll when subnav is open.
+// Save/restore scrollY around position:fixed to prevent the browser from
+// jumping to the top of the page when the body is taken out of flow.
 const preventBodyScroll = () => {
+  savedScrollY = window.scrollY
   document.body.style.overflow = 'hidden'
   document.body.style.position = 'fixed'
+  document.body.style.top = `-${savedScrollY}px`
   document.body.style.width = '100%'
 }
 const restoreBodyScroll = () => {
   document.body.style.overflow = ''
   document.body.style.position = ''
+  document.body.style.top = ''
   document.body.style.width = ''
+  window.scrollTo(0, savedScrollY)
 }
 
 // While this panel is open, the panel it's nested inside (its nearest
