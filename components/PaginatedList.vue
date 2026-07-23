@@ -10,7 +10,6 @@
       v-if="totalPages > 1"
       v-model:currentPage="currentPage"
       :totalPages="totalPages"
-      @update:currentPage="onPageChange"
     />
   </div>
 </template>
@@ -36,7 +35,7 @@ const emit = defineEmits(['page-change'])
 const currentPage = ref(1)
 
 const totalPages = computed(() => {
-  return Math.ceil(props.items.length / props.itemsPerPage)
+  return Math.max(1, Math.ceil(props.items.length / props.itemsPerPage))
 })
 
 const paginatedItems = computed(() => {
@@ -51,10 +50,11 @@ const onPageChange = (page) => {
   emit('page-change', page)
 }
 
-// Reset to page 1 when items change
 watch(() => props.items, () => {
   currentPage.value = 1
 })
+
+watch(currentPage, onPageChange)
 </script>
 
 <style scoped>

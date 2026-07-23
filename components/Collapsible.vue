@@ -1,5 +1,6 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
+import Button from '@/mini/components/Button.vue'
 
 const props = defineProps({
   defaultOpen: {
@@ -38,16 +39,6 @@ const props = defineProps({
 
 const isOpen = ref(props.defaultOpen)
 
-const buttonClasses = computed(() => {
-  const classes = ['btn', 'collapsible-toggle']
-  if (props.buttonSize) classes.push(props.buttonSize)
-  if (props.buttonColor) {
-    classes.push(props.buttonInvert ? `${props.buttonColor}-btn-invert` : `${props.buttonColor}-btn`)
-  }
-  if (props.buttonClass) classes.push(props.buttonClass)
-  return classes
-})
-
 function toggle() {
   isOpen.value = !isOpen.value
 }
@@ -58,9 +49,17 @@ function toggle() {
     <div v-show="isOpen" class="collapsible-content" :class="contentClass">
       <slot/>
     </div>
-    <button type="button" :class="buttonClasses" @click="toggle">
+    <Button
+      type="button"
+      :color="buttonColor || undefined"
+      :invert="buttonInvert"
+      :size="buttonSize || undefined"
+      :class="buttonClass"
+      class="collapsible-toggle"
+      @click="toggle"
+    >
       <slot name="trigger" :is-open="isOpen">{{ isOpen ? closeLabel : openLabel }}</slot>
-    </button>
+    </Button>
   </div>
 </template>
 

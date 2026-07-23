@@ -10,6 +10,7 @@ import Container from '@/mini/components/Container.vue';
 import Boxes from '@/mini/components/Boxes.vue';
 import Box from '@/mini/components/Box.vue';
 import { XmarkCircle } from '@iconoir/vue'
+import { lockBodyScroll, unlockBodyScroll } from '@/mini/composables/useBodyScrollLock'
 
 const props = defineProps({
   visible: Boolean,
@@ -22,33 +23,11 @@ const emit = defineEmits(['close', 'loaded'])
 
 const rootEl = ref(null)
 let lockedAncestor = null
-let savedScrollY = 0
 
-const closeModal = () => {
-  emit('close')
-}
+const closeModal = () => emit('close')
 
-// Close subnav on Esc key
 const handleKeydown = (e) => {
   if (e.key === 'Escape') closeModal()
-}
-
-// Prevent body scroll when subnav is open.
-// Save/restore scrollY around position:fixed to prevent the browser from
-// jumping to the top of the page when the body is taken out of flow.
-const preventBodyScroll = () => {
-  savedScrollY = window.scrollY
-  document.body.style.overflow = 'hidden'
-  document.body.style.position = 'fixed'
-  document.body.style.top = `-${savedScrollY}px`
-  document.body.style.width = '100%'
-}
-const restoreBodyScroll = () => {
-  document.body.style.overflow = ''
-  document.body.style.position = ''
-  document.body.style.top = ''
-  document.body.style.width = ''
-  window.scrollTo(0, savedScrollY)
 }
 
 // While this panel is open, the panel it's nested inside (its nearest
@@ -71,11 +50,12 @@ const unlockAncestorScroll = () => {
 }
 
 // Body scroll is a global resource — only the outermost layer (1) locks
-// and unlocks it. Nested layers lock only their direct ancestor's scroll.
+// and unlocks it via the shared ref-counted lock. Nested layers lock only
+// their direct ancestor's scroll.
 watch(() => props.visible, (newVisible) => {
   if (props.layer === 1) {
-    if (newVisible) preventBodyScroll()
-    else restoreBodyScroll()
+    if (newVisible) lockBodyScroll()
+    else unlockBodyScroll()
   }
   if (newVisible) lockAncestorScroll()
   else unlockAncestorScroll()
@@ -84,18 +64,17 @@ watch(() => props.visible, (newVisible) => {
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
   if (props.visible) {
-    if (props.layer === 1) preventBodyScroll()
+    if (props.layer === 1) lockBodyScroll()
     lockAncestorScroll()
   }
+  emit('loaded')
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown)
-  if (props.layer === 1) restoreBodyScroll()
+  if (props.layer === 1 && props.visible) unlockBodyScroll()
   unlockAncestorScroll()
 })
-
-emit('loaded');
 
 // --- Backdrop click: close only the innermost open layer ---
 //
@@ -143,8 +122,8 @@ onUnmounted(() => {
 <template>
     <Transition name="subnav-slide" appear>
         <Container ref="rootEl" v-show="visible" fw class="subnav-box full-page-container" :class="`subnav-layer-${layer}`">
-            <div v-if="layer === 1" id="black-layer" @click="handleBackdropClick()"></div>
-            <Boxes id="click-to-hide-layer" fh class="justify-content-start align-items-start z-3">
+            <div v-if="layer === 1" class="subnav-black-layer" @click="handleBackdropClick()"></div>
+            <Boxes class="subnav-click-layer justify-content-start align-items-start z-3" fh>
                 <Box padding="2" background="white" class="ps-2 pe-5 box-shadow subnav-content-wrapper">
                     <p class="m-0 right" style="position: absolute; right: calc( var(--margin) * 1.5 ); top: calc( var(--margin) * 1.5 );">
                         <a class="pointer black-text">
@@ -168,7 +147,7 @@ onUnmounted(() => {
   z-index: 999;
 }
 
-#black-layer {
+.subnav-black-layer {
   position: fixed;
   top: 0;
   left: 0;
@@ -178,7 +157,7 @@ onUnmounted(() => {
   z-index: 1;
 }
 
-#click-to-hide-layer {
+.subnav-click-layer {
   position: relative;
   z-index: 2;
   width: 100%;
@@ -244,12 +223,12 @@ onUnmounted(() => {
   transform: translateX(-100%);
 }
 
-.subnav-slide-enter-active #black-layer,
-.subnav-slide-leave-active #black-layer {
+.subnav-slide-enter-active .subnav-black-layer,
+.subnav-slide-leave-active .subnav-black-layer {
   transition: opacity 0.3s ease;
 }
-.subnav-slide-enter-from #black-layer,
-.subnav-slide-leave-to #black-layer {
+.subnav-slide-enter-from .subnav-black-layer,
+.subnav-slide-leave-to .subnav-black-layer {
   opacity: 0;
 }
 </style>

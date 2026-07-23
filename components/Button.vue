@@ -99,11 +99,11 @@ const buttonClasses = computed(() => {
     }
   } else {
     if (props.active) {
-      classes.pop('btn')
+      classes.splice(classes.indexOf('btn'), 1)
       classes.push('btn-active')
     } else {
       if (props.invert) {
-        classes.pop('btn')
+        classes.splice(classes.indexOf('btn'), 1)
         classes.push('btn-invert')
       }
     }

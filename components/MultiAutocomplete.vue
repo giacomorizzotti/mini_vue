@@ -80,10 +80,11 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
       autocomplete="off"
       @input="isOpen = true"
       @focus="isOpen = true"
+      @blur="isOpen = false"
       @keydown="handleKeydown"
     />
     <ul v-if="isOpen && filteredOptions.length" class="autocomplete-options">
-      <li v-for="option in filteredOptions" :key="option.id" @click="selectOption(option)">
+      <li v-for="option in filteredOptions" :key="option.id" @mousedown.prevent @click="selectOption(option)">
         {{ option.label }}
       </li>
     </ul>
