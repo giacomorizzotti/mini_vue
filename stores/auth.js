@@ -243,7 +243,11 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    async function initiateLogin(authorizeEndpoint, redirectUri) {
+    // Same PKCE setup initiateLogin() below navigates with immediately, but
+    // returned instead of navigated to — for a caller that needs to detour
+    // through another page first (e.g. an invite-gated registration form on
+    // the auth server) before continuing the authorization-code flow.
+    async function buildAuthorizeUrl(authorizeEndpoint, redirectUri) {
         const verifier = generateCodeVerifier()
         const challenge = await generateCodeChallenge(verifier)
         const state = generateCodeVerifier()
@@ -261,7 +265,11 @@ export const useAuthStore = defineStore('auth', () => {
             state,
         })
 
-        window.location.href = `${authorizeEndpoint}?${params.toString()}`
+        return `${authorizeEndpoint}?${params.toString()}`
+    }
+
+    async function initiateLogin(authorizeEndpoint, redirectUri) {
+        window.location.href = await buildAuthorizeUrl(authorizeEndpoint, redirectUri)
     }
 
     async function handleCallback(code, redirectUri) {
@@ -353,6 +361,7 @@ export const useAuthStore = defineStore('auth', () => {
         authError,
         authHeaders,
         loginWithPassword,
+        buildAuthorizeUrl,
         initiateLogin,
         handleCallback,
         refreshAccessToken,
