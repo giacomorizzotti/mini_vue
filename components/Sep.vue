@@ -25,7 +25,7 @@
     'third-col-dark': 'third-color-dark', 'third-color-dark': 'third-color-dark',
     'fourth-col': 'fourth-color', 'fourth-color': 'fourth-color',
     'fourth-col-dark': 'fourth-color-dark', 'fourth-color-dark': 'fourth-color-dark',
-    'link': 'link','link-color': 'link',
+    'link': 'link','link-color': 'link','link-hover': 'link-hover',
     info: 'info', success: 'success', warning: 'warning', danger: 'danger', bad: 'bad',
     'acid-green': 'acid-green', gingerbread: 'gingerbread',
     mini: 'mini', 'mini-dark': 'mini-dark', 'mini-second': 'mini-second', 'mini-third': 'mini-third', 'mini-fourth': 'mini-fourth',
@@ -40,7 +40,7 @@ const sepClass = computed(() => {
   const classes = ['sep']
   // Color
   if (props.color && colorClassMap[props.color]) {
-    classes.push(colorClassMap[props.color]+'-bg')
+    classes.push(colorClassMap[props.color]+'-border')
   } 
   // Color
   if (props.height) {
