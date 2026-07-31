@@ -18,9 +18,21 @@ const props = defineProps({
     type: String,
     default: 'Search...',
   },
+  // When true, a query with no exact-label match offers a "create" row at
+  // the end of the dropdown — the component never creates anything itself
+  // (it doesn't know about the caller's API), it just emits `create` with
+  // the trimmed query text for the caller to handle.
+  allowCreate: {
+    type: Boolean,
+    default: false,
+  },
+  createLabel: {
+    type: Function,
+    default: (query) => `Create "${query}"`,
+  },
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'create'])
 
 const query = ref('')
 const isOpen = ref(false)
@@ -37,6 +49,16 @@ const filteredOptions = computed(() => {
   return available.filter(option => option.label.toLowerCase().includes(search))
 })
 
+const trimmedQuery = computed(() => query.value.trim())
+
+// Only offered when nothing already matches exactly (case-insensitive) —
+// no point offering to create a duplicate of an option already selectable
+// (or already selected/hidden from filteredOptions) below.
+const showCreateOption = computed(() =>
+  props.allowCreate && trimmedQuery.value.length > 0
+  && !props.options.some(option => option.label.toLowerCase() === trimmedQuery.value.toLowerCase())
+)
+
 function selectOption(option) {
   emit('update:modelValue', [...props.modelValue, option.id])
   query.value = ''
@@ -46,12 +68,23 @@ function removeOption(id) {
   emit('update:modelValue', props.modelValue.filter(existingId => existingId !== id))
 }
 
+function createOption() {
+  emit('create', trimmedQuery.value)
+  query.value = ''
+  isOpen.value = false
+}
+
 function handleKeydown(event) {
   if (event.key === 'Escape') {
     isOpen.value = false
-  } else if (event.key === 'Enter' && isOpen.value && filteredOptions.value.length) {
-    event.preventDefault()
-    selectOption(filteredOptions.value[0])
+  } else if (event.key === 'Enter' && isOpen.value) {
+    if (filteredOptions.value.length) {
+      event.preventDefault()
+      selectOption(filteredOptions.value[0])
+    } else if (showCreateOption.value) {
+      event.preventDefault()
+      createOption()
+    }
   }
 }
 
@@ -83,9 +116,12 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
       @blur="isOpen = false"
       @keydown="handleKeydown"
     />
-    <ul v-if="isOpen && filteredOptions.length" class="autocomplete-options">
+    <ul v-if="isOpen && (filteredOptions.length || showCreateOption)" class="autocomplete-options">
       <li v-for="option in filteredOptions" :key="option.id" @mousedown.prevent @click="selectOption(option)">
         {{ option.label }}
+      </li>
+      <li v-if="showCreateOption" @mousedown.prevent @click="createOption">
+        {{ createLabel(trimmedQuery) }}
       </li>
     </ul>
   </div>
