@@ -1,6 +1,9 @@
 <script setup>
 import { ref, watch, onUnmounted } from 'vue'
 import { InfoCircle } from '@iconoir/vue'
+import { useInfoLayer } from '../composables/useInfoLayer'
+
+const infoLayerEnabled = useInfoLayer()
 
 const props = defineProps({
   size: { type: String, default: '18px' },
@@ -63,7 +66,7 @@ const bubbleClass = {
   own sake, so the popover always anchors to the icon regardless of how the
   caller positions the outer wrapper — passing `absolute` in from outside
   can no longer fight over the same element's `position`. -->
-  <span class="info-tip-outer inline-block">
+  <span v-if="infoLayerEnabled" class="info-tip-outer inline-block">
     <span ref="rootRef" class="info-tip relative inline-block">
       <button type="button" class="info-tip-trigger m-0 round" :aria-expanded="open" :aria-label="ariaLabel" @click="toggle">
         <InfoCircle :width="size" :height="size" class="grey-text" />
