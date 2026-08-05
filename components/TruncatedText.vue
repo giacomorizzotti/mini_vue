@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import Button from '@/mini/components/Button.vue'
+import Space from '@/mini/components/Space.vue'
 
 const props = defineProps({
   text: {
@@ -9,7 +10,7 @@ const props = defineProps({
   },
   limit: {
     type: Number,
-    default: 150,
+    default: 256,
   },
 })
 
@@ -25,15 +26,10 @@ const displayText = computed(() => {
 
 <template>
   {{ displayText }}
-  <Button
+  <a
     v-if="isTruncated"
-    type="button"
-    size="XS"
-    color="light-grey"
-    invert
-    rounded
-    class="transp-bg ms-05"
-    style="padding: 0 calc(var(--padding)*0.5)"
+    class="light-grey-text dark-grey-text-hover XS m-0 underline"
+    style="padding: 0 calc(var(--padding)*0.25)"
     @click="expanded = !expanded"
-  >{{ expanded ? 'Show less' : 'Show more' }}</Button>
+  >{{ expanded ? 'Show less' : 'Show more' }}</a>
 </template>
