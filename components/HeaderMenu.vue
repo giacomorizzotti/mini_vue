@@ -1,5 +1,6 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import Boxes from '@/mini/components/Boxes.vue';
 import Box from '@/mini/components/Box.vue';
 import MenuToggle from '@/mini/components/MenuToggle.vue';
@@ -29,14 +30,28 @@ const headerMenuClasses = computed(() => {
 })
 
 
-const headerMenuPresence = computed(() => {
-  const sections = document.querySelectorAll('section.page-menu')
-  if (sections.length > 0) {
-    return true
-  } else {
-    return false
-  }
-})
+// Whether any `section.page-menu` element exists on the current page, so
+// the nav box only renders when PageMenu would actually have something to show.
+// Must be a ref updated after mount (and after each route change), not a
+// computed: computed() only re-evaluates when a *reactive* dependency
+// changes, and document.querySelectorAll isn't one — read synchronously
+// during this component's own initial render (which happens before Vue has
+// patched the page component's sections into the real DOM), it would cache
+// `false` forever and the nav would never appear, no matter how many
+// page-menu sections got added later.
+const headerMenuPresence = ref(false)
+const route = useRoute()
+
+function updateHeaderMenuPresence() {
+  // Same one-tick defer as PageMenu.vue's own updateMenuItems/observeSections
+  // — gives the page component's sections a moment to actually land in the DOM.
+  setTimeout(() => {
+    headerMenuPresence.value = document.querySelectorAll('section.page-menu').length > 0
+  }, 0)
+}
+
+onMounted(updateHeaderMenuPresence)
+watch(() => route.fullPath, updateHeaderMenuPresence)
 
 </script>
 
