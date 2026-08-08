@@ -27,7 +27,19 @@
       type:[Boolean], 
       default:false
     },
+    spaceTop: {
+      type:[Boolean], 
+      default:false
+    },
+    spaceBot: {
+      type:[Boolean], 
+      default:false
+    },
     fh: {
+      type:[Boolean], 
+      default:false
+    },
+    hh: {
       type:[Boolean], 
       default:false
     },
@@ -53,6 +65,12 @@
     if (props.space === true || props.spaceTopBot === true) {
       classes.push('space-top-bot')
     }
+    if (props.spaceTop === true) {
+      classes.push('space-top')
+    }
+    if (props.spaceBot === true) {
+      classes.push('space-bot')
+    }
 
     // Margins and paddings
     const paddingClass = props.padding && marginAndPaddingClassMap[props.padding] ? 'p-'+marginAndPaddingClassMap[props.padding] : null
@@ -63,6 +81,10 @@
     // Full height
     if (props.fh === true) {
       classes.push('fh')
+    }
+    // Half height
+    if (props.hh === true) {
+      classes.push('hh')
     }
 
     return classes

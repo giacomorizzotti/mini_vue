@@ -51,7 +51,6 @@ export { default as PaginatedList } from './PaginatedList.vue'
 
 // Dialog/Form Components
 export { default as ConfirmDialog } from './ConfirmDialog.vue'
-export { default as LoginForm } from './LoginForm.vue'
 export { default as GDPR } from './GDPR.vue'
 
 // Utility Components

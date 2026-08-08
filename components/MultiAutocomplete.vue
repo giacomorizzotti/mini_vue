@@ -100,12 +100,6 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
 
 <template>
   <div ref="rootEl" class="autocomplete">
-    <p v-if="selectedOptions.length" class="m-0 mb-05">
-      <span v-for="option in selectedOptions" :key="option.id" class="grey-box">
-        {{ option.label }}
-        <Xmark width="14" height="14" style="vertical-align: text-bottom; cursor: pointer;" class="ms-05" @click="removeOption(option.id)"/>
-      </span>
-    </p>
     <input
       type="text"
       v-model="query"
@@ -124,6 +118,12 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
         {{ createLabel(trimmedQuery) }}
       </li>
     </ul>
+    <p v-if="selectedOptions.length" class="mt-1 mb-0">
+      <span v-for="option in selectedOptions" :key="option.id" class="grey-box">
+        {{ option.label }}
+        <Xmark width="14" height="14" style="vertical-align: text-bottom; cursor: pointer;" class="ms-05" @click="removeOption(option.id)"/>
+      </span>
+    </p>
   </div>
 </template>
 
