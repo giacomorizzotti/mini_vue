@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { Xmark } from '@iconoir/vue'
 
 const props = defineProps({
   modelValue: {
@@ -89,6 +90,15 @@ function handleClickOutside(event) {
   }
 }
 
+// @mousedown.prevent (see each <li> above) keeps focus on the input so this
+// doesn't trigger handleBlur's exact-match fallback before the clear takes
+// effect.
+function clearSelection() {
+  emit('update:modelValue', null)
+  query.value = ''
+  isOpen.value = false
+}
+
 onMounted(() => window.addEventListener('click', handleClickOutside))
 onUnmounted(() => window.removeEventListener('click', handleClickOutside))
 </script>
@@ -98,12 +108,22 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
     <input
       type="text"
       v-model="query"
+      :class="{ 'has-clear': query }"
       :placeholder="placeholder"
       autocomplete="off"
       @input="handleInput"
       @focus="isOpen = true"
       @blur="handleBlur"
       @keydown="handleKeydown"
+    />
+    <Xmark
+      v-if="query"
+      width="14"
+      height="14"
+      class="autocomplete-clear"
+      title="Clear"
+      @mousedown.prevent
+      @click="clearSelection"
     />
     <ul v-if="isOpen && filteredOptions.length" class="autocomplete-options">
       <li v-for="option in filteredOptions" :key="option.id" @mousedown.prevent @click="selectOption(option)">
@@ -116,6 +136,22 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
 <style lang="scss" scoped>
 .autocomplete {
   position: relative;
+}
+
+.autocomplete input.has-clear {
+  padding-right: calc(var(--padding) * 2.25);
+}
+
+.autocomplete-clear {
+  position: absolute;
+  top: 50%;
+  right: var(--padding);
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--grey);
+  &:hover {
+    color: var(--color);
+  }
 }
 
 .autocomplete-options {

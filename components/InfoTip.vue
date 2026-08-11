@@ -126,6 +126,6 @@ const bubbleClass = {
   transform: translateX(-50%);
 }
 .info-tip-panel.align-right {
-  right: calc(var(--margin) * -0.1);
+  right: calc(var(--margin) * -1.1);
 }
 </style>
