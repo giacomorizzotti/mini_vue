@@ -47,8 +47,16 @@ const visibleMenuItems = computed(() => {
   })
 })
 
-const processedMenuClose = () => {
-  window.scrollTo(0,0)
+const processedMenuClose = (event) => {
+  // Only scroll back to top for an actual navigation (a real <a>, e.g. a
+  // RouterLink or a Button rendered with its `link` prop) inside the menu
+  // -- a non-navigating action nested in a menu (a toggle button, etc.)
+  // would otherwise yank the page to the top on every click, since this
+  // handler sits on the menu's <ul> and catches every click bubbling
+  // through it, not just link clicks.
+  if (event.target.closest('a')) {
+    window.scrollTo(0,0)
+  }
   if (props.menuCloseOnClick === true) {
     menuClose()
   }
