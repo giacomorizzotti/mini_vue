@@ -73,7 +73,7 @@ const bubbleClass = {
       </button>
       <div
         v-if="open"
-        class="info-tip-panel false-white-bg border color-border box-shadow-darker b-rad-5 p-1"
+        class="info-tip-panel false-white-bg border-2 color-border box-shadow-darker b-rad-5 p-1"
         :class="[bubbleClass[align], `align-${align}`]"
         :style="{ maxWidth }"
       >
@@ -84,6 +84,21 @@ const bubbleClass = {
 </template>
 
 <style scoped>
+
+.info-tip {
+    padding: calc( var(--padding) * 0.1);
+    line-height: 0.8;
+    border-radius: 100px;
+    background: -webkit-linear-gradient(135deg, var(--info) 33%, var(--main-color) 100%);
+    background: -moz-linear-gradient(135deg, var(--info) 33%, var(--main-color) 100%);
+    background: -o-linear-gradient(135deg, var(--info) 33%, var(--main-color) 100%);
+    background: linear-gradient(135deg, var(--info) 33%, var(--main-color) 100%);
+    top: calc( var(--margin) * -0.5);
+    svg {
+        color: var(--white)!important;
+    }
+}
+
 .info-tip-trigger {
   background: none;
   border: none;
@@ -98,19 +113,19 @@ const bubbleClass = {
   position: absolute;
   top: calc(100% + var(--margin));
   z-index: 1000;
-  min-width: 200px;
+  min-width: 220px;
   text-align: left;
   white-space: normal;
   font-weight: normal;
 }
 .info-tip-panel.align-left {
-  left: calc(var(--margin) * -1.25);
+  left: calc(var(--margin) * -0.1);
 }
 .info-tip-panel.align-center {
   left: 50%;
   transform: translateX(-50%);
 }
 .info-tip-panel.align-right {
-  right: calc(var(--margin) * -1.25);
+  right: calc(var(--margin) * -0.1);
 }
 </style>

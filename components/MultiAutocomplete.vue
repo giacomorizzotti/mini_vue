@@ -118,8 +118,8 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
         {{ createLabel(trimmedQuery) }}
       </li>
     </ul>
-    <p v-if="selectedOptions.length" class="mt-1 mb-0">
-      <span v-for="option in selectedOptions" :key="option.id" class="grey-box">
+    <p v-if="selectedOptions.length" class="my-1 flex g-05 align-items-start flex-wrap">
+      <span v-for="option in selectedOptions" :key="option.id" class="link-box p-075 b-rad-5">
         {{ option.label }}
         <Xmark width="14" height="14" style="vertical-align: text-bottom; cursor: pointer;" class="ms-05" @click="removeOption(option.id)"/>
       </span>
@@ -144,7 +144,7 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
   padding: 0;
   list-style: none;
   background: var(--white);
-  border: 1px solid var(--light-grey);
+  border: 1px solid var(--color);
   border-radius: 4px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
@@ -155,6 +155,6 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
 }
 
 .autocomplete-options li:hover {
-  background: var(--light-grey);
+  background: var(--main-color-transp);
 }
 </style>

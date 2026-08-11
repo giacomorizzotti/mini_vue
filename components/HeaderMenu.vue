@@ -61,8 +61,8 @@ watch(() => route.fullPath, updateHeaderMenuPresence)
       <Box v-if="headerMenuPresence" id="header-menu-box md">
         <Menu id="page-menu" :invert="props.invert"/>
       </Box>
-      <Box>
-        <MenuToggle v-if="menuToggle"/>
+      <Box v-if="menuToggle">
+        <MenuToggle/>
       </Box>
     </Boxes>
   </Box>

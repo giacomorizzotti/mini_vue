@@ -98,7 +98,7 @@ watchEffect(() => {
 
 <template>
   <nav class="menu" :class="menuClass">
-    <ul class="menu" :class="directionClass">
+    <ul class="menu m-0" :class="directionClass">
       <li
         v-for="item in menuItems"
         class="item"

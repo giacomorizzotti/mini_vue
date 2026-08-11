@@ -10,12 +10,12 @@
       <Box :size="100" class="right">
         <Button
           color="grey"
+          invert
           @click="cancel"
         >
           {{ currentCancelText }}
         </Button>
         <Button
-          color="main-color"
           @click="confirm"
         >
           {{ currentConfirmText }}
