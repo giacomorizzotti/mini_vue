@@ -5,6 +5,7 @@
 
 // Re-export all composables from their individual files
 export { useMobileDetection } from './useMobileDetection'
+export { useViewportBreakpoint } from './useViewportBreakpoint'
 export { useCookies } from './useCookies'
 export { useScrollDetection } from './useScrollDetection'
 export { useScrollState } from './useScrollState'
