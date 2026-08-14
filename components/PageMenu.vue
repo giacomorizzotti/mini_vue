@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watchEffect } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useMenuState } from '@/mini/composables/useMenuState'
 const { menuStateClass } = useMenuState()
@@ -41,17 +41,12 @@ const menuItems = ref([])
 const activeSection = ref(null)
 
 function updateMenuItems() {
-  menuItems.value = []
   const sections = document.querySelectorAll('section.page-menu')
-  if (sections.length > 0) {
-    for (let section of sections) {
-      menuItems.value.push({
-        title: section.getAttribute('title'),
-        link: '#' + section.id,
-        id: section.id
-      })
-    }
-  }
+  menuItems.value = Array.from(sections).map(section => ({
+    title: section.getAttribute('title'),
+    link: '#' + section.id,
+    id: section.id
+  }))
 }
 
 // Intersection Observer to track active section
@@ -59,17 +54,13 @@ let observer = null
 function observeSections() {
   if (observer) observer.disconnect()
   const sections = document.querySelectorAll('section.page-menu')
+  if (!sections.length) return
   observer = new window.IntersectionObserver(
     (entries) => {
-      // Find the first section that is intersecting (visible)
       const visible = entries
-        .filter(entry => entry.isIntersecting)
+        .filter(e => e.isIntersecting)
         .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
-      if (visible.length > 0) {
-        activeSection.value = visible[0].target.id
-      } else {
-        activeSection.value = null // Remove active if none is visible
-      }
+      activeSection.value = visible[0]?.target.id ?? null
     },
     {
       threshold: [0.3, 0.6, 1.0],
@@ -79,21 +70,17 @@ function observeSections() {
   sections.forEach(section => observer.observe(section))
 }
 
+async function refresh() {
+  await nextTick()
+  updateMenuItems()
+  observeSections()
+}
+
 const route = useRoute()
+watch(() => route.path, refresh)
 
-onMounted(() => {
-  setTimeout(() => {
-    updateMenuItems()
-    observeSections()
-  }, 0)
-})
-
-watchEffect(() => {
-  setTimeout(() => {
-    updateMenuItems()
-    observeSections()
-  }, 0)
-})
+onMounted(refresh)
+onUnmounted(() => { if (observer) observer.disconnect() })
 </script>
 
 <template>

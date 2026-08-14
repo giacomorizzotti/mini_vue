@@ -58,7 +58,7 @@ watch(() => route.fullPath, updateHeaderMenuPresence)
 <template>
   <Box id="head-menus" :class="headerMenuClasses">
     <Boxes class="g-0 align-items-center">
-      <Box v-if="headerMenuPresence" id="header-menu-box md">
+      <Box v-if="headerMenuPresence" id="header-menu-box" class="p-0">
         <Menu id="page-menu" :invert="props.invert"/>
       </Box>
       <Box v-if="menuToggle">

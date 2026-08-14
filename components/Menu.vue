@@ -1,10 +1,8 @@
 <script setup>
 import { computed } from 'vue'
 import { useMenuState } from '@/mini/composables/useMenuState'
-import { useAuthStore } from '@/mini/stores/auth'
 
 const { menuStateClass, menuClose } = useMenuState()
-const authStore = useAuthStore()
 
 const props = defineProps({
   menuItems: {
@@ -18,6 +16,10 @@ const props = defineProps({
   direction: {
     type: [String],
     default: 'column'
+  },
+  isAuthenticated: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -35,11 +37,11 @@ const visibleMenuItems = computed(() => {
   if (!props.menuItems) return []
 
   return props.menuItems.filter(item => {
-    if (item?.requiresAuth && !authStore.isAuthenticated) {
+    if (item?.requiresAuth && !props.isAuthenticated) {
       return false
     }
 
-    if (item?.guestOnly && authStore.isAuthenticated) {
+    if (item?.guestOnly && props.isAuthenticated) {
       return false
     }
 
