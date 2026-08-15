@@ -52,6 +52,30 @@ const TRANSLATIONS = {
     statusGranted: 'yes',
     statusDenied:  'no',
   },
+  fr: {
+    title:         'Nous utilisons des cookies analytiques',
+    desc:          'Ce site utilise des cookies analytiques tiers pour mesurer les visites et améliorer votre expérience de navigation. Les données sont collectées de façon anonyme et agrégée. Aucun cookie analytique n\'est enregistré sans votre consentement explicite.',
+    changeNote:    'Vous pouvez modifier vos préférences à tout moment en cliquant sur l\'icône 🍪 ci-dessous.',
+    privacyLink:   'Politique de confidentialité',
+    cookieLink:    'Politique de cookies',
+    denyBtn:       'Cookies techniques uniquement',
+    acceptBtn:     'Tout accepter',
+    statusPrefix:  'Choix :',
+    statusGranted: 'oui',
+    statusDenied:  'non',
+  },
+  de: {
+    title:         'Wir verwenden Analyse-Cookies',
+    desc:          'Diese Website verwendet Analyse-Cookies von Drittanbietern, um Besuche zu messen und die Nutzererfahrung zu verbessern. Die Daten werden anonym und aggregiert erfasst. Ohne deine ausdrückliche Zustimmung wird kein Analyse-Cookie gespeichert.',
+    changeNote:    'Du kannst deine Einstellungen jederzeit über das 🍪-Symbol unten ändern.',
+    privacyLink:   'Datenschutzerklärung',
+    cookieLink:    'Cookie-Richtlinie',
+    denyBtn:       'Nur technische Cookies',
+    acceptBtn:     'Alle akzeptieren',
+    statusPrefix:  'Auswahl:',
+    statusGranted: 'ja',
+    statusDenied:  'nein',
+  },
 }
 
 function getLang() {
