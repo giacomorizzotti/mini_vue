@@ -8,7 +8,7 @@ import Space from './Space.vue';
       default: 'mini'
     },
     company: {type: [String]},
-    company_url: {type: [String]},
+    companyUrl: {type: [String]},
     phone: {type: [String]},
     telegram: {type: [String]},
     email: {type: [String]},
@@ -23,7 +23,7 @@ import Space from './Space.vue';
 </script>
 
 <template>
-  <p class="">{{ currentYear }}&nbsp;©&nbsp;<a v-if="props.company_url" :href="props.company_url" class="bold" target="_blank">{{ props.company }}</a><span v-else class="bold">{{ props.company }}</span></p>
+  <p class="">{{ currentYear }}&nbsp;©&nbsp;<a v-if="props.companyUrl" :href="props.companyUrl" class="bold" target="_blank">{{ props.company }}</a><span v-else>{{ props.company }}</span></p>
   <p v-if="props.address" class="S mb-0">{{ props.address }}</p>
   <p v-if="props.addressTwo" class="S mt-0">{{ props.addressTwo }}</p>
   <Space v-if="props.email || props.telegram || props.phone"/>
