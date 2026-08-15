@@ -5,6 +5,7 @@
       default: 'mini'
     },
     company: {type: [String], default: "UWA.agency"},
+    company_url: {type: [String]},
     phone: {type: [String], default: "+39 345 329 7079"},
     email: {type: [String], default: "ciao@uwa.agency"},
     address: {type: [String], default: "Via Sant'Andrea Apostolo 32"},
@@ -18,7 +19,7 @@
 </script>
 
 <template>
-  <p class="">{{ currentYear }}&nbsp;©&nbsp;<span class="bold">{{ props.company }}</span></p>
+  <p class="">{{ currentYear }}&nbsp;©&nbsp;<a v-if="props.company_url" :href="props.company_url" class="bold" target="_blank">{{ props.company }}</a><span v-else class="bold">{{ props.company }}</span></p>
   <p v-if="props.address" class="S mb-0">{{ props.address }}</p>
   <p v-if="props.addressTwo" class="S mt-0">{{ props.addressTwo }}</p>
   <p v-if="props.email" class="S mb-0"><span class="label">email:</span> <b>{{ props.email }}</b></p>
