@@ -32,7 +32,7 @@ onMounted(async () => {
         <Box :size="100">
           <h1>Privacy policy</h1>
         </Box>
-        <Box :size="66" v-html="privacyHtml">
+        <Box :size="66" v-html="privacyHtml" padding="0">
         </Box>
       </Boxes>
     </Container>
