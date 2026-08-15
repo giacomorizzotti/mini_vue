@@ -1,15 +1,19 @@
 <script setup>
+import { Telegram } from '@iconoir/vue';
+import Space from './Space.vue';
+
   const props = defineProps({
     siteTitle: {
       type: [String],
       default: 'mini'
     },
-    company: {type: [String], default: "UWA.agency"},
+    company: {type: [String]},
     company_url: {type: [String]},
-    phone: {type: [String], default: "+39 345 329 7079"},
-    email: {type: [String], default: "ciao@uwa.agency"},
-    address: {type: [String], default: "Via Sant'Andrea Apostolo 32"},
-    addressTwo: {type: [String], default: "28100, Novara [NO], Italy"},
+    phone: {type: [String]},
+    telegram: {type: [String]},
+    email: {type: [String]},
+    address: {type: [String]},
+    addressTwo: {type: [String]},
     TaxNumber: {type: [String]},
     idCode: {type: [String]},
   })
@@ -22,10 +26,13 @@
   <p class="">{{ currentYear }}&nbsp;©&nbsp;<a v-if="props.company_url" :href="props.company_url" class="bold" target="_blank">{{ props.company }}</a><span v-else class="bold">{{ props.company }}</span></p>
   <p v-if="props.address" class="S mb-0">{{ props.address }}</p>
   <p v-if="props.addressTwo" class="S mt-0">{{ props.addressTwo }}</p>
-  <p v-if="props.email" class="S mb-0"><span class="label">email:</span> <b>{{ props.email }}</b></p>
-  <p v-if="props.phone" class="S mt-0"><span class="label">phone:</span> <b>{{ props.phone }}</b></p>
-  <p v-if="props.TaxNumber" class="S mb-0"><span class="label">P.IVA:</span> <b>{{ props.TaxNumber }}</b></p>
-  <p v-if="props.idCode" class="S mt-0"><span class="label">C.F:</span> <b>{{ props.idCode }}</b></p>
+  <Space v-if="props.email || props.telegram || props.phone"/>
+  <p v-if="props.email" class="S m-0"><span class="label">email:</span> <b>{{ props.email }}</b></p>
+  <p v-if="props.phone" class="S m-0"><span class="label">phone:</span> <b>{{ props.phone }}</b></p>
+  <p v-if="props.telegram" class="S m-0"><a :href="'https://t.me/'+props.telegram"><Telegram width="16px" height="16px" style="vertical-align: text-bottom;" title="Telegram"  /> @{{ props.telegram }}</a></p>
+  <Space v-if="props.TaxNumber || props.idCode"/>
+  <p v-if="props.TaxNumber" class="S m-0"><span class="label">P.IVA:</span> <b>{{ props.TaxNumber }}</b></p>
+  <p v-if="props.idCode" class="S m-0"><span class="label">C.F:</span> <b>{{ props.idCode }}</b></p>
 </template>
 
 <style lang="scss" scoped>
