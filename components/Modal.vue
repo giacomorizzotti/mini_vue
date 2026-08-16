@@ -43,7 +43,7 @@ onUnmounted(() => {
         <Container v-if="visible" fw class="modal-box full-page-container" :style="{ zIndex: zIndex }">
             <div class="modal-black-layer"></div>
             <Boxes class="modal-click-layer justify-content-center align-items-center z-top" fh @click="handleLayerClick">
-                <Box :size="50" padding="2" background="white" class="b-rad-10 box-shadow modal-content-wrapper">
+                <Box padding="2" background="white" class="box-zero-100 box-sm-80 box-md-70 box-lg-66 box-xl-50 b-rad-10 box-shadow modal-content-wrapper">
                     <p class="m-0 right" style="position: absolute; right: calc( var(--margin) * 1.5 ); top: calc( var(--margin) * 1.5 ); z-index:9;">
                         <a class="pointer black-text">
                             <XmarkCircle width="32px" height="32px" class="m-0" @click="emit('close');" style="background-color: var(--white); border-radius: 50%; box-shadow: 0 0 5px 5px var(--white)"/>
