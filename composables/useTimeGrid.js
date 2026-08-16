@@ -102,6 +102,12 @@ export function useDragToCreate(getContainer, {
   const previewRange = ref(null)
   let anchorMinutes = null
 
+  function cleanup() {
+    window.removeEventListener('pointermove', onPointerMove)
+    window.removeEventListener('pointerup', onPointerUp)
+    window.removeEventListener('pointercancel', onPointerCancel)
+  }
+
   function onPointerMove(event) {
     const current = minutesAtPointer(event)
     previewRange.value = {
@@ -110,10 +116,7 @@ export function useDragToCreate(getContainer, {
     }
   }
 
-  function onPointerUp() {
-    window.removeEventListener('pointermove', onPointerMove)
-    window.removeEventListener('pointerup', onPointerUp)
-
+  function commitCreate() {
     let { startMinutes, endMinutes } = previewRange.value
     if (endMinutes - startMinutes < slotMinutes) {
       endMinutes = startMinutes + clickDurationMinutes
@@ -128,13 +131,90 @@ export function useDragToCreate(getContainer, {
     onCreate?.({ startMinutes, endMinutes })
   }
 
+  function onPointerUp() {
+    cleanup()
+    commitCreate()
+  }
+
+  // Fires instead of pointerup when the browser takes the gesture over
+  // itself -- notably, a touch drag the OS decides is a page scroll rather
+  // than handing it to us. Without this, cleanup only ever ran from
+  // pointerup: the window-level pointermove/pointerup listeners stayed
+  // attached with a stale anchor, and the *next* unrelated tap anywhere in
+  // the document (e.g. a week-navigation button) got misread as "drag
+  // finished", creating an entry from two disjoint touches. Treat a cancel
+  // as a plain abort -- clean up, discard whatever partial preview existed,
+  // never call onCreate.
+  function onPointerCancel() {
+    cleanup()
+    previewRange.value = null
+    anchorMinutes = null
+  }
+
+  // Touch tap-detection, kept entirely separate from the mouse/pen drag
+  // path below: at the moment of touchdown there is no way to tell a tap
+  // apart from the start of a scroll swipe, since both begin identically.
+  // These listeners only ever *watch* -- never preventDefault, never
+  // attach anything that could block the browser's own scroll handling --
+  // and commit a create only if the pointer lifts again without moving
+  // past a small threshold. If it moves past that threshold (a real scroll
+  // attempt) or the browser itself takes the gesture over as a pan
+  // (pointercancel, possibly before we even see a pointermove), nothing is
+  // created and native scrolling was never interfered with in the first
+  // place. This is the touch resolution for the same physical conflict
+  // useDragToMove/useDragToResize don't attempt to solve (drag-to-move on
+  // an existing chip is a small, precisely-targeted gesture; free-drawing a
+  // new range over the whole scrollable grid background is not).
+  const TAP_MOVE_THRESHOLD_PX = 10
+  let touchStartX = 0
+  let touchStartY = 0
+  let touchStartMinutes = null
+  let touchMoved = false
+
+  function cleanupTouchWatch() {
+    window.removeEventListener('pointermove', onTouchWatchMove)
+    window.removeEventListener('pointerup', onTouchWatchEnd)
+    window.removeEventListener('pointercancel', onTouchWatchCancel)
+  }
+  function onTouchWatchMove(event) {
+    const dx = event.clientX - touchStartX
+    const dy = event.clientY - touchStartY
+    if (Math.hypot(dx, dy) > TAP_MOVE_THRESHOLD_PX) {
+      touchMoved = true
+      cleanupTouchWatch()
+    }
+  }
+  function onTouchWatchEnd() {
+    cleanupTouchWatch()
+    if (touchMoved) return // was a scroll attempt, not a tap -- create nothing
+    anchorMinutes = touchStartMinutes
+    previewRange.value = { startMinutes: anchorMinutes, endMinutes: anchorMinutes }
+    commitCreate()
+  }
+  function onTouchWatchCancel() {
+    cleanupTouchWatch()
+  }
+
   function onPointerDown(event) {
     if (event.target.closest?.('[data-grid-entry]')) return
+
+    if (event.pointerType === 'touch') {
+      touchStartX = event.clientX
+      touchStartY = event.clientY
+      touchStartMinutes = minutesAtPointer(event)
+      touchMoved = false
+      window.addEventListener('pointermove', onTouchWatchMove)
+      window.addEventListener('pointerup', onTouchWatchEnd)
+      window.addEventListener('pointercancel', onTouchWatchCancel)
+      return
+    }
+
     event.preventDefault()
     anchorMinutes = minutesAtPointer(event)
     previewRange.value = { startMinutes: anchorMinutes, endMinutes: anchorMinutes }
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('pointerup', onPointerUp)
+    window.addEventListener('pointercancel', onPointerCancel)
   }
 
   return { previewRange, onPointerDown }
@@ -173,6 +253,12 @@ export function useDragToMove(getContainer, {
   let duration = 0
   let moved = false
 
+  function cleanup() {
+    window.removeEventListener('pointermove', onPointerMove)
+    window.removeEventListener('pointerup', onPointerUp)
+    window.removeEventListener('pointercancel', onPointerCancel)
+  }
+
   function onPointerMove(event) {
     const startMinutes = Math.min(
       Math.max(minutesAtPointer(event) - grabOffsetMinutes, rangeStart),
@@ -183,14 +269,22 @@ export function useDragToMove(getContainer, {
   }
 
   function onPointerUp() {
-    window.removeEventListener('pointermove', onPointerMove)
-    window.removeEventListener('pointerup', onPointerUp)
+    cleanup()
 
     const range = previewRange.value
     previewRange.value = null
 
     if (moved) onMove?.(range)
     else onClick?.()
+  }
+
+  // See useDragToCreate's onPointerCancel for why this matters: without it,
+  // a touch gesture the browser takes over as a scroll leaves the
+  // window-level listeners armed with a stale grab offset, ready to
+  // misfire on a later unrelated tap. Abort only -- never call onMove.
+  function onPointerCancel() {
+    cleanup()
+    previewRange.value = null
   }
 
   function onPointerDown(event) {
@@ -202,6 +296,7 @@ export function useDragToMove(getContainer, {
     previewRange.value = { startMinutes, endMinutes }
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('pointerup', onPointerUp)
+    window.addEventListener('pointercancel', onPointerCancel)
   }
 
   return { previewRange, onPointerDown }
@@ -236,18 +331,30 @@ export function useDragToResize(getContainer, {
   let fixedStart = 0
   let initialEnd = 0
 
+  function cleanup() {
+    window.removeEventListener('pointermove', onPointerMove)
+    window.removeEventListener('pointerup', onPointerUp)
+    window.removeEventListener('pointercancel', onPointerCancel)
+  }
+
   function onPointerMove(event) {
     const endMinutes = Math.min(Math.max(minutesAtPointer(event), fixedStart + slotMinutes), rangeEnd)
     previewRange.value = { startMinutes: fixedStart, endMinutes }
   }
 
   function onPointerUp() {
-    window.removeEventListener('pointermove', onPointerMove)
-    window.removeEventListener('pointerup', onPointerUp)
+    cleanup()
 
     const range = previewRange.value
     previewRange.value = null
     if (range.endMinutes !== initialEnd) onResize?.(range)
+  }
+
+  // See useDragToCreate's onPointerCancel for why this matters. Abort only
+  // -- never call onResize.
+  function onPointerCancel() {
+    cleanup()
+    previewRange.value = null
   }
 
   function onPointerDown(event) {
@@ -258,6 +365,7 @@ export function useDragToResize(getContainer, {
     previewRange.value = { startMinutes, endMinutes }
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('pointerup', onPointerUp)
+    window.addEventListener('pointercancel', onPointerCancel)
   }
 
   return { previewRange, onPointerDown }
