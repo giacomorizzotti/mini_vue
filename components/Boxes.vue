@@ -36,11 +36,19 @@
       default:false
     },
     fh: {
-      type:[Boolean], 
+      type:[Boolean],
       default:false
     },
     hh: {
-      type:[Boolean], 
+      type:[Boolean],
+      default:false
+    },
+    // Makes this Boxes' own width (not the viewport's) drive its .box
+    // children's responsive sizing -- see mini's _box.scss for the
+    // container-query mechanism this opts into. Off by default: existing
+    // Boxes/Box usage everywhere is unaffected unless this is set.
+    contain: {
+      type:[Boolean],
       default:false
     },
   })
@@ -85,6 +93,11 @@
     // Half height
     if (props.hh === true) {
       classes.push('hh')
+    }
+
+    // Containment context for children's responsive sizing (see _box.scss)
+    if (props.contain === true) {
+      classes.push('contain')
     }
 
     return classes
