@@ -7,6 +7,15 @@ import Boxes from '@/mini/components/Boxes.vue'
 import Box from '@/mini/components/Box.vue'
 import { OWNER } from '@/config/owner'
 
+// Default matches every consumer's current behavior unchanged -- only a
+// project that actually processes data for a purpose beyond login/analytics
+// (e.g. jpm's Paddle billing) needs to pass a wider list; see the shared
+// api.uwa.agency/privacy-policy/ service's own $PURPOSE_CATALOG for which
+// keys exist.
+const props = defineProps({
+  purposes: { type: String, default: 'login,analytics' },
+})
+
 const { showMessage } = useMessage()
 const privacyHtml = ref('')
 
@@ -14,7 +23,7 @@ onMounted(async () => {
   try {
     const url = new URL('https://api.uwa.agency/privacy-policy/')
     Object.entries(OWNER).forEach(([k, v]) => url.searchParams.set(k, v))
-    url.searchParams.set('purposes', 'login,analytics')
+    url.searchParams.set('purposes', props.purposes)
     url.searchParams.set('hosting_region', 'eu')
     const response = await fetch(url)
     privacyHtml.value = await response.text()
