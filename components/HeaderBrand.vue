@@ -14,8 +14,8 @@ const props = defineProps({
     default: 'https://mini.uwa.agency/img/brand/mini_emblem.svg'
   },
   title: {
-    type: [String],
-    default: ''
+    type: [String, null],
+    default: undefined
   },
   menuToggle: {
     type: [Boolean],
@@ -58,8 +58,11 @@ const resolvedLogo = computed(() => {
 })
 
 const resolvedTitle = computed(() => {
-  const rawTitle = typeof props.title === 'string' ? props.title.trim() : ''
-  if (rawTitle) return props.title
+  // Explicit null = suppress title entirely
+  if (props.title === null) return ''
+  // Non-empty string = use it
+  if (typeof props.title === 'string' && props.title.trim()) return props.title
+  // Not passed (undefined) = fall back to document.title
   if (typeof document !== 'undefined' && typeof document.title === 'string' && document.title.trim()) {
     return document.title
   }
