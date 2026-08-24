@@ -98,7 +98,37 @@ function wrapSelection(before, after = before) {
   setValueAndSelect(newValue, cursorStart, cursorStart + selected.length)
 }
 
-// Line-prefix buttons (Heading/Bulleted list/Numbered list/Quote): prefixes
+// Heading is its own case, not a plain prefixLines() marker like the other
+// three below -- there are 4 distinguishable levels (see mini's own
+// _markdown.scss), and a single fixed "## " button could only ever reach
+// one of them. Clicking cycles the *current line* (never a multi-line
+// selection -- a heading belongs to one line, unlike a list/quote block)
+// through none -> H1 -> H2 -> H3 -> H4 -> none, detecting whatever level
+// is already there rather than blindly stacking more #s on repeated
+// clicks.
+function cycleHeading() {
+  const el = textareaRef.value
+  if (!el) return
+  const start = el.selectionStart
+  const end = el.selectionEnd
+  const text = value.value
+  const lineStart = text.lastIndexOf('\n', start - 1) + 1
+  const nextBreak = text.indexOf('\n', start)
+  const lineEnd = nextBreak === -1 ? text.length : nextBreak
+  const line = text.slice(lineStart, lineEnd)
+
+  const match = /^(#{1,4}) /.exec(line)
+  const currentLevel = match ? match[1].length : 0
+  const nextLevel = currentLevel >= 4 ? 0 : currentLevel + 1
+  const rest = match ? line.slice(match[0].length) : line
+  const newLine = nextLevel === 0 ? rest : '#'.repeat(nextLevel) + ' ' + rest
+
+  const newValue = text.slice(0, lineStart) + newLine + text.slice(lineEnd)
+  const delta = newLine.length - line.length
+  setValueAndSelect(newValue, start + delta, end + delta)
+}
+
+// Line-prefix buttons (Bulleted list/Numbered list/Quote): prefixes
 // every line touched by the current selection (or just the current line,
 // with nothing selected) with `marker`. Always a flat marker per line
 // (e.g. "1. " on every line, not incrementing) -- CommonMark renders an
@@ -153,7 +183,7 @@ function onKeydown(event) {
 <template>
   <div class="markdown-editor">
     <p class="m-0 mb-05 flex flex-wrap align-items-center gap-05">
-      <Button size="XS" color="light-grey" invert rounded title="Heading" @click="prefixLines('## ')">
+      <Button size="XS" color="light-grey" invert rounded title="Heading (click to cycle H1–H4)" @click="cycleHeading">
         <TextSize width="14px" height="14px"/>
       </Button>
       <Button size="XS" color="light-grey" invert rounded title="Bold (Ctrl/Cmd+B)" @click="wrapSelection('**')">
