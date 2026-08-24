@@ -259,7 +259,12 @@ function onKeydown(event) {
       @keydown="onKeydown"
     ></textarea>
     <div v-show="markdown && activeTab === 'preview'" class="markdown-editor-preview" :style="{ minHeight }">
-      <MarkdownText v-if="value" :text="value"/>
+      <!-- Always :markdown="true" here, never MarkdownText's own default --
+           this pane is only ever shown while markdown === true (see the
+           v-show above), so "Preview" always means "render this as
+           Markdown," independent of MarkdownText's own default-to-plain
+           behavior at other call sites. -->
+      <MarkdownText v-if="value" :text="value" :markdown="true"/>
       <p v-else class="grey-text m-0">Nothing to preview yet.</p>
     </div>
   </div>
