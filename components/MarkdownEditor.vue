@@ -38,13 +38,15 @@ const props = defineProps({
     default: '',
   },
   // Controlled, like modelValue -- see the header comment above for why
-  // this can't be local state. Defaults true so a call site that hasn't
-  // been wired up to persist it yet (or a brand-new record with nothing
-  // saved either way) behaves exactly like every field did before this
-  // toggle existed.
+  // this can't be local state. Defaults false (Plain) -- new content
+  // starts out as plain text until its author deliberately opts into
+  // Markdown, rather than the other way around. A call site that hasn't
+  // wired this up to persist at all just gets an editor that always opens
+  // in Plain mode -- still fully usable, just without the toggle meaning
+  // anything across a reload.
   markdown: {
     type: Boolean,
-    default: true,
+    default: false,
   },
   placeholder: {
     type: String,
