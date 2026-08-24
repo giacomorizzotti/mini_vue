@@ -120,16 +120,17 @@ function fromDatetimeLocal(value) {
  * Combine one calendar date with separate start/end time-of-day strings
  * ('HH:mm') into a `{startedAt, endedAt}` pair of UTC ISO strings, for a
  * "pick a date, then a start and end time" form where the two times might
- * span midnight. `endsNextDay` is an explicit caller-supplied flag, not
- * inferred by comparing the two time strings -- inferring "end <= start
- * means overnight" would silently reinterpret an ordinary same-day typo
- * (meant 17:00, typed 07:00) as a real ~14-hour overnight entry instead of
- * leaving it for the caller's own end-after-start validation to catch, the
- * same way it already does today. Pass `true` only when the caller has its
- * own unambiguous signal that the range is meant to cross midnight (e.g. an
- * explicit "ends next day" checkbox the user ticked, or a drag gesture that
- * reached a day boundary — see `useTimeGrid`'s `minutesToDayOffsetAndLabel`
- * for turning that into a boolean).
+ * span midnight. `endsNextDay` is a plain caller-supplied flag -- this
+ * function never inspects `startTime`/`endTime` itself to decide it, so the
+ * caller picks how to derive it. A single-shared-date form (one `dateKey`
+ * for both ends) has an unambiguous rule available: `endTime < startTime`
+ * always means the next day, since there is no other valid same-day
+ * interpretation of an end time that isn't after the start time -- that's
+ * the common case and what jpm's manual time-entry forms pass in. A drag
+ * gesture on an hour grid has its own exact, numeric answer instead (see
+ * `useTimeGrid`'s `minutesToDayOffsetAndLabel`, which already knows whether
+ * it crossed a day boundary without needing to compare labels at all) and
+ * should pass that.
  * @param {string} dateKey - 'YYYY-MM-DD', the start date.
  * @param {string} startTime - 'HH:mm'.
  * @param {string} endTime - 'HH:mm'.
