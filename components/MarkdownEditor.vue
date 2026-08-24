@@ -1,0 +1,198 @@
+<script setup>
+import { ref, computed, nextTick } from 'vue'
+import { Bold, Italic, Link, List, NumberedListLeft, Quote, Code, TextSize } from '@iconoir/vue'
+import Button from './Button.vue'
+import MarkdownText from './MarkdownText.vue'
+
+// Full Markdown editor: a toolbar-driven <textarea> plus a Write/Preview
+// tab toggle, replacing a plain <textarea> wherever a description/pin-body
+// field is edited. See plans/MARKDOWN_EDITOR_DESIGN.md (jpm repo) for the
+// full design writeup this implements.
+//
+// inheritAttrs: false + a manual v-bind="$attrs" on the <textarea> itself
+// (not the wrapping <div>) -- every call site this replaces has its own
+// `<label for="some-id">` pointing at what used to be a plain <textarea>;
+// without this, Vue's default fallthrough would put that `id` (and
+// anything else, e.g. `required`) on the wrapping div instead, silently
+// breaking the label's click-to-focus behavior.
+defineOptions({ inheritAttrs: false })
+
+const props = defineProps({
+  modelValue: {
+    type: String,
+    default: '',
+  },
+  placeholder: {
+    type: String,
+    default: '',
+  },
+  // Forwarded straight onto the <textarea> -- matches every existing
+  // plain-<textarea> call site this replaces (e.g. `style="min-height:
+  // 160px"`), so swapping the tag doesn't also require rewriting each
+  // call site's own sizing.
+  minHeight: {
+    type: String,
+    default: '160px',
+  },
+})
+
+const emit = defineEmits(['update:modelValue'])
+
+// Single source of truth -- the <textarea> binds to this directly, and
+// every toolbar action reads/writes through it too, so there's never a
+// separate "local draft" that could drift from what the parent sees.
+const value = computed({
+  get: () => props.modelValue,
+  set: (v) => emit('update:modelValue', v),
+})
+
+const activeTab = ref('write')
+const textareaRef = ref(null)
+
+// Every toolbar action funnels through here: write the new full text, then
+// (after the DOM has actually re-rendered with it -- selectionStart/End
+// can't be set against content that isn't there yet) restore focus and
+// select whatever range makes sense for that action, so typing can
+// continue immediately instead of the cursor jumping to the end.
+function setValueAndSelect(newValue, selStart, selEnd) {
+  value.value = newValue
+  nextTick(() => {
+    const el = textareaRef.value
+    if (!el) return
+    el.focus()
+    el.setSelectionRange(selStart, selEnd)
+  })
+}
+
+// Wrap-selection buttons (Bold/Italic/Inline code): wraps the current
+// selection in `before`/`after`; with nothing selected, inserts an empty
+// pair and places the cursor between them. Also handles the reverse --
+// re-clicking the same button toggles the markers back off, whether the
+// selection includes them (selected the whole "**bold**") or sits just
+// inside them (selected only "bold", markers immediately outside it) --
+// the common "undo what I just did" gesture, not just one-way wrapping.
+function wrapSelection(before, after = before) {
+  const el = textareaRef.value
+  if (!el) return
+  const start = el.selectionStart
+  const end = el.selectionEnd
+  const text = value.value
+  const selected = text.slice(start, end)
+
+  if (selected.startsWith(before) && selected.endsWith(after) && selected.length >= before.length + after.length) {
+    const inner = selected.slice(before.length, selected.length - after.length)
+    setValueAndSelect(text.slice(0, start) + inner + text.slice(end), start, start + inner.length)
+    return
+  }
+  const outerBefore = text.slice(Math.max(0, start - before.length), start)
+  const outerAfter = text.slice(end, end + after.length)
+  if (before && outerBefore === before && outerAfter === after) {
+    const newValue = text.slice(0, start - before.length) + selected + text.slice(end + after.length)
+    const newStart = start - before.length
+    setValueAndSelect(newValue, newStart, newStart + selected.length)
+    return
+  }
+
+  const newValue = text.slice(0, start) + before + selected + after + text.slice(end)
+  const cursorStart = start + before.length
+  setValueAndSelect(newValue, cursorStart, cursorStart + selected.length)
+}
+
+// Line-prefix buttons (Heading/Bulleted list/Numbered list/Quote): prefixes
+// every line touched by the current selection (or just the current line,
+// with nothing selected) with `marker`. Always a flat marker per line
+// (e.g. "1. " on every line, not incrementing) -- CommonMark renders an
+// <ol> correctly regardless of the literal numbers in the source, so
+// there's no need to track/renumber them here.
+function prefixLines(marker) {
+  const el = textareaRef.value
+  if (!el) return
+  const start = el.selectionStart
+  const end = el.selectionEnd
+  const text = value.value
+  const lineStart = text.lastIndexOf('\n', start - 1) + 1
+  const nextBreak = text.indexOf('\n', end)
+  const lineEnd = nextBreak === -1 ? text.length : nextBreak
+  const block = text.slice(lineStart, lineEnd)
+  const prefixed = block.split('\n').map(line => marker + line).join('\n')
+  const newValue = text.slice(0, lineStart) + prefixed + text.slice(lineEnd)
+  const addedBeforeStart = marker.length
+  const addedTotal = prefixed.length - block.length
+  setValueAndSelect(newValue, start + addedBeforeStart, end + addedTotal)
+}
+
+// Its own case, not a wrap/prefix variant: inserts `[label](https://)`
+// around the current selection (selection becomes the link label, or a
+// placeholder "link text" with nothing selected) and selects the
+// "https://" placeholder so typing immediately replaces it -- no
+// window.prompt()/inline dialog needed just for this one button, matching
+// this app's existing avoidance of native prompt()/confirm() elsewhere.
+function insertLink() {
+  const el = textareaRef.value
+  if (!el) return
+  const start = el.selectionStart
+  const end = el.selectionEnd
+  const text = value.value
+  const label = text.slice(start, end) || 'link text'
+  const urlPlaceholder = 'https://'
+  const insertion = `[${label}](${urlPlaceholder})`
+  const newValue = text.slice(0, start) + insertion + text.slice(end)
+  const urlStart = start + 1 + label.length + 2
+  setValueAndSelect(newValue, urlStart, urlStart + urlPlaceholder.length)
+}
+
+function onKeydown(event) {
+  if (!(event.metaKey || event.ctrlKey)) return
+  const key = event.key.toLowerCase()
+  if (key === 'b') { event.preventDefault(); wrapSelection('**') }
+  else if (key === 'i') { event.preventDefault(); wrapSelection('*') }
+  else if (key === 'k') { event.preventDefault(); insertLink() }
+}
+</script>
+
+<template>
+  <div class="markdown-editor">
+    <p class="m-0 mb-05 flex flex-wrap align-items-center gap-05">
+      <Button size="XS" color="light-grey" invert rounded title="Heading" @click="prefixLines('## ')">
+        <TextSize width="14px" height="14px"/>
+      </Button>
+      <Button size="XS" color="light-grey" invert rounded title="Bold (Ctrl/Cmd+B)" @click="wrapSelection('**')">
+        <Bold width="14px" height="14px"/>
+      </Button>
+      <Button size="XS" color="light-grey" invert rounded title="Italic (Ctrl/Cmd+I)" @click="wrapSelection('*')">
+        <Italic width="14px" height="14px"/>
+      </Button>
+      <Button size="XS" color="light-grey" invert rounded title="Link (Ctrl/Cmd+K)" @click="insertLink">
+        <Link width="14px" height="14px"/>
+      </Button>
+      <Button size="XS" color="light-grey" invert rounded title="Bulleted list" @click="prefixLines('- ')">
+        <List width="14px" height="14px"/>
+      </Button>
+      <Button size="XS" color="light-grey" invert rounded title="Numbered list" @click="prefixLines('1. ')">
+        <NumberedListLeft width="14px" height="14px"/>
+      </Button>
+      <Button size="XS" color="light-grey" invert rounded title="Quote" @click="prefixLines('> ')">
+        <Quote width="14px" height="14px"/>
+      </Button>
+      <Button size="XS" color="light-grey" invert rounded title="Inline code" @click="wrapSelection('`')">
+        <Code width="14px" height="14px"/>
+      </Button>
+      <span class="flex-grow"></span>
+      <Button size="XS" color="light-grey" :invert="activeTab !== 'write'" rounded @click="activeTab = 'write'">Write</Button>
+      <Button size="XS" color="light-grey" :invert="activeTab !== 'preview'" rounded @click="activeTab = 'preview'">Preview</Button>
+    </p>
+    <textarea
+      v-show="activeTab === 'write'"
+      ref="textareaRef"
+      v-model="value"
+      v-bind="$attrs"
+      :placeholder="placeholder"
+      :style="{ minHeight }"
+      @keydown="onKeydown"
+    ></textarea>
+    <div v-show="activeTab === 'preview'" class="markdown-editor-preview" :style="{ minHeight }">
+      <MarkdownText v-if="value" :text="value"/>
+      <p v-else class="grey-text m-0">Nothing to preview yet.</p>
+    </div>
+  </div>
+</template>
