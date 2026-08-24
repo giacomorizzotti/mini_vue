@@ -8,14 +8,19 @@ import MarkdownText from './MarkdownText.vue'
 // <textarea> wherever a description/pin-body field is edited. Two nested
 // toggles, both the same "single button, label names the current state"
 // shape:
-//  - mode ('markdown'/'plain') -- always visible. 'plain' hides the whole
-//    formatting toolbar (including the Write/Preview toggle below) down to
-//    a bare <textarea>, for anyone who just wants to type without dealing
-//    with Markdown at all. Nothing is stored differently either way --
-//    this only changes what the *editor* shows, not how the saved text is
-//    later rendered.
-//  - activeTab ('write'/'preview') -- only shown/relevant while
-//    mode === 'markdown'.
+//  - markdown (prop, v-model:markdown -- a real per-instance choice the
+//    parent persists alongside the text itself, not local UI state) --
+//    always visible. false hides the whole formatting toolbar (including
+//    the Write/Preview toggle below) down to a bare <textarea>, for a
+//    field someone deliberately wants to keep as plain text. Controlled,
+//    not a local ref, specifically so MarkdownText.vue (the display side)
+//    can be told the same thing and skip Markdown parsing entirely for
+//    that field -- a local-only toggle here would leave a stray `#`/`*`/
+//    `-` in "plain" text to still get reinterpreted as formatting the
+//    moment it's displayed elsewhere.
+//  - activeTab ('write'/'preview', local -- purely an editing-session
+//    view, nothing to persist) -- only shown/relevant while markdown is
+//    true.
 // See plans/MARKDOWN_EDITOR_DESIGN.md (jpm repo) for the full design
 // writeup this implements.
 //
@@ -32,6 +37,15 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  // Controlled, like modelValue -- see the header comment above for why
+  // this can't be local state. Defaults true so a call site that hasn't
+  // been wired up to persist it yet (or a brand-new record with nothing
+  // saved either way) behaves exactly like every field did before this
+  // toggle existed.
+  markdown: {
+    type: Boolean,
+    default: true,
+  },
   placeholder: {
     type: String,
     default: '',
@@ -46,7 +60,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'update:markdown'])
 
 // Single source of truth -- the <textarea> binds to this directly, and
 // every toolbar action reads/writes through it too, so there's never a
@@ -56,12 +70,11 @@ const value = computed({
   set: (v) => emit('update:modelValue', v),
 })
 
-const mode = ref('markdown')
 const activeTab = ref('write')
 const textareaRef = ref(null)
 
 function toggleMode() {
-  mode.value = mode.value === 'markdown' ? 'plain' : 'markdown'
+  emit('update:markdown', !props.markdown)
 }
 function toggleTab() {
   activeTab.value = activeTab.value === 'write' ? 'preview' : 'write'
@@ -190,7 +203,7 @@ function insertLink() {
 }
 
 function onKeydown(event) {
-  if (mode.value !== 'markdown') return
+  if (!props.markdown) return
   if (!(event.metaKey || event.ctrlKey)) return
   const key = event.key.toLowerCase()
   if (key === 'b') { event.preventDefault(); wrapSelection('**') }
@@ -202,7 +215,7 @@ function onKeydown(event) {
 <template>
   <div class="markdown-editor">
     <p class="bar m-0 mb-05 flex flex-wrap align-items-start justify-content-between gap-05">
-      <span v-if="mode === 'markdown'" class="flex flex-wrap gap-05 align-items-start justify-content-start">
+      <span v-if="markdown" class="flex flex-wrap gap-05 align-items-start justify-content-start">
         <Button size="XS" color="" invert rounded class="m-0" title="Heading (click to cycle H1–H4)" @click="cycleHeading">
           <TextSize width="14px" height="14px" style="vertical-align: middle;"/>
         </Button>
@@ -230,12 +243,12 @@ function onKeydown(event) {
       </span>
       <span v-else></span>
       <span class="flex flex-wrap g-05 align-items-start justify-content-end">
-        <Button v-if="mode === 'markdown'" size="XS" color="" rounded class="m-0" :title="activeTab === 'write' ? 'Editing the raw text -- click to preview it as Markdown' : 'Previewing rendered Markdown -- click to go back to editing'" @click="toggleTab">{{ activeTab === 'write' ? 'Write' : 'Preview' }}</Button>
-        <Button size="XS" color="" rounded class="m-0" :title="mode === 'markdown' ? 'Markdown formatting is on -- click to switch to a plain textarea' : 'Plain textarea, no formatting -- click to turn Markdown formatting back on'" @click="toggleMode">{{ mode === 'markdown' ? 'MarkDown' : 'Plain' }}</Button>
+        <Button v-if="markdown" size="XS" color="" rounded class="m-0" :title="activeTab === 'write' ? 'Editing the raw text -- click to preview it as Markdown' : 'Previewing rendered Markdown -- click to go back to editing'" @click="toggleTab">{{ activeTab === 'write' ? 'Write' : 'Preview' }}</Button>
+        <Button size="XS" color="" rounded class="m-0" :title="markdown ? 'Markdown formatting is on -- click to switch to a plain textarea' : 'Plain textarea, no formatting -- click to turn Markdown formatting back on'" @click="toggleMode">{{ markdown ? 'MarkDown' : 'Plain' }}</Button>
       </span>
     </p>
     <textarea
-      v-show="mode === 'plain' || activeTab === 'write'"
+      v-show="!markdown || activeTab === 'write'"
       ref="textareaRef"
       v-model="value"
       v-bind="$attrs"
@@ -243,7 +256,7 @@ function onKeydown(event) {
       :style="{ minHeight }"
       @keydown="onKeydown"
     ></textarea>
-    <div v-show="mode === 'markdown' && activeTab === 'preview'" class="markdown-editor-preview" :style="{ minHeight }">
+    <div v-show="markdown && activeTab === 'preview'" class="markdown-editor-preview" :style="{ minHeight }">
       <MarkdownText v-if="value" :text="value"/>
       <p v-else class="grey-text m-0">Nothing to preview yet.</p>
     </div>
