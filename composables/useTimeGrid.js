@@ -70,7 +70,29 @@ export function useTimeGrid({ startHour = 0, endHour = 24, slotMinutes = 15 } = 
     return snapToSlot(minutes, slotMinutes, rangeStart, rangeEnd)
   }
 
-  return { totalMinutes, hourMarks, minutesToPercent, durationToPercent, snapMinutes, minutesToTimeLabel }
+  // A drag (create/resize) that reaches this track's own rangeEnd (a day
+  // boundary, normally 1440 = 24:00) means "midnight, the start of the next
+  // day" -- a real, different moment from 23:59 the *same* day, which is
+  // all `minutesToTimeLabel`'s own clamp can express (that clamp exists for
+  // rendering a *position*, e.g. a chip clipped at the bottom of its
+  // column, not for computing a value to persist). Splitting `minutes` into
+  // how many whole days it overflows plus the wrapped label for what's left
+  // lets a caller building a real timestamp -- e.g. jpm's
+  // TimeEntryBox.vue:patchTimeRange -- add that day count onto whatever
+  // calendar date it's otherwise using, instead of losing up to a day's
+  // worth of a dragged range at the boundary. dayOffset is 0 for any
+  // ordinary in-range value; a drag/resize bounded to this one track can
+  // only ever reach exactly rangeEnd at most, so it's never more than 1.
+  function minutesToDayOffsetAndLabel(minutes) {
+    const dayOffset = Math.floor(minutes / (24 * 60))
+    const wrapped = minutes - dayOffset * 24 * 60
+    return { dayOffset, label: minutesToTimeLabel(wrapped) }
+  }
+
+  return {
+    totalMinutes, hourMarks, minutesToPercent, durationToPercent, snapMinutes,
+    minutesToTimeLabel, minutesToDayOffsetAndLabel,
+  }
 }
 
 /**

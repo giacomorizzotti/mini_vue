@@ -117,6 +117,38 @@ function fromDatetimeLocal(value) {
 }
 
 /**
+ * Combine one calendar date with separate start/end time-of-day strings
+ * ('HH:mm') into a `{startedAt, endedAt}` pair of UTC ISO strings, for a
+ * "pick a date, then a start and end time" form where the two times might
+ * span midnight. `endsNextDay` is an explicit caller-supplied flag, not
+ * inferred by comparing the two time strings -- inferring "end <= start
+ * means overnight" would silently reinterpret an ordinary same-day typo
+ * (meant 17:00, typed 07:00) as a real ~14-hour overnight entry instead of
+ * leaving it for the caller's own end-after-start validation to catch, the
+ * same way it already does today. Pass `true` only when the caller has its
+ * own unambiguous signal that the range is meant to cross midnight (e.g. an
+ * explicit "ends next day" checkbox the user ticked, or a drag gesture that
+ * reached a day boundary — see `useTimeGrid`'s `minutesToDayOffsetAndLabel`
+ * for turning that into a boolean).
+ * @param {string} dateKey - 'YYYY-MM-DD', the start date.
+ * @param {string} startTime - 'HH:mm'.
+ * @param {string} endTime - 'HH:mm'.
+ * @param {boolean} [endsNextDay]
+ * @returns {{startedAt: string, endedAt: string}}
+ */
+function fromDateAndTimeRange(dateKey, startTime, endTime, endsNextDay = false) {
+  const startedAt = fromDatetimeLocal(`${dateKey}T${startTime}`)
+  let endDateKey = dateKey
+  if (endsNextDay) {
+    const d = fromDateKey(dateKey)
+    d.setDate(d.getDate() + 1)
+    endDateKey = toDateKey(d)
+  }
+  const endedAt = fromDatetimeLocal(`${endDateKey}T${endTime}`)
+  return { startedAt, endedAt }
+}
+
+/**
  * Format how long ago a date was as "5 minutes ago", "3 hours ago", "2 days
  * ago", etc., falling back to `formatDate` beyond a month since "N months
  * ago" gets imprecise. Returns '' for empty/invalid input, "just now" for
@@ -152,5 +184,10 @@ function formatTimeAgo(value) {
  * @returns {Object} Date formatting utilities
  */
 export function useDateFormat() {
-  return { formatDate, formatTime, formatDuration, formatTimeAgo, toDateKey, fromDateKey, toDatetimeLocal, fromDatetimeLocal }
+  return {
+    formatDate, formatTime, formatDuration, formatTimeAgo,
+    toDateKey, fromDateKey, toDatetimeLocal, fromDatetimeLocal, fromDateAndTimeRange,
+  }
 }
+
+export { fromDateAndTimeRange }
