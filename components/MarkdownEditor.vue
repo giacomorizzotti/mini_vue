@@ -4,10 +4,10 @@ import { Bold, Italic, Link, List, NumberedListLeft, Quote, Code, TextSize } fro
 import Button from './Button.vue'
 import MarkdownText from './MarkdownText.vue'
 
-// Full Markdown editor: a toolbar-driven <textarea> plus a Write/Preview
-// tab toggle, replacing a plain <textarea> wherever a description/pin-body
-// field is edited. See plans/MARKDOWN_EDITOR_DESIGN.md (jpm repo) for the
-// full design writeup this implements.
+// Full Markdown editor: a toolbar-driven <textarea> plus a single Plain/
+// MarkDown toggle button, replacing a plain <textarea> wherever a
+// description/pin-body field is edited. See plans/MARKDOWN_EDITOR_DESIGN.md
+// (jpm repo) for the full design writeup this implements.
 //
 // inheritAttrs: false + a manual v-bind="$attrs" on the <textarea> itself
 // (not the wrapping <div>) -- every call site this replaces has its own
@@ -46,8 +46,12 @@ const value = computed({
   set: (v) => emit('update:modelValue', v),
 })
 
-const activeTab = ref('write')
+const activeTab = ref('plain')
 const textareaRef = ref(null)
+
+function toggleTab() {
+  activeTab.value = activeTab.value === 'plain' ? 'markdown' : 'plain'
+}
 
 // Every toolbar action funnels through here: write the new full text, then
 // (after the DOM has actually re-rendered with it -- selectionStart/End
@@ -182,37 +186,39 @@ function onKeydown(event) {
 
 <template>
   <div class="markdown-editor">
-    <p class="m-0 mb-05 flex flex-wrap align-items-center gap-05">
-      <Button size="XS" color="light-grey" invert rounded title="Heading (click to cycle H1–H4)" @click="cycleHeading">
-        <TextSize width="14px" height="14px"/>
-      </Button>
-      <Button size="XS" color="light-grey" invert rounded title="Bold (Ctrl/Cmd+B)" @click="wrapSelection('**')">
-        <Bold width="14px" height="14px"/>
-      </Button>
-      <Button size="XS" color="light-grey" invert rounded title="Italic (Ctrl/Cmd+I)" @click="wrapSelection('*')">
-        <Italic width="14px" height="14px"/>
-      </Button>
-      <Button size="XS" color="light-grey" invert rounded title="Link (Ctrl/Cmd+K)" @click="insertLink">
-        <Link width="14px" height="14px"/>
-      </Button>
-      <Button size="XS" color="light-grey" invert rounded title="Bulleted list" @click="prefixLines('- ')">
-        <List width="14px" height="14px"/>
-      </Button>
-      <Button size="XS" color="light-grey" invert rounded title="Numbered list" @click="prefixLines('1. ')">
-        <NumberedListLeft width="14px" height="14px"/>
-      </Button>
-      <Button size="XS" color="light-grey" invert rounded title="Quote" @click="prefixLines('> ')">
-        <Quote width="14px" height="14px"/>
-      </Button>
-      <Button size="XS" color="light-grey" invert rounded title="Inline code" @click="wrapSelection('`')">
-        <Code width="14px" height="14px"/>
-      </Button>
-      <span class="flex-grow"></span>
-      <Button size="XS" color="light-grey" :invert="activeTab !== 'write'" rounded @click="activeTab = 'write'">Write</Button>
-      <Button size="XS" color="light-grey" :invert="activeTab !== 'preview'" rounded @click="activeTab = 'preview'">Preview</Button>
+    <p class="bar m-0 mb-05 flex flex-wrap align-items-start justify-content-between gap-05">
+      <span class="flex flex-wrap gap-05 align-items-start justify-content-start">
+        <Button size="XS" color="" invert rounded class="m-0" title="Heading (click to cycle H1–H4)" @click="cycleHeading">
+          <TextSize width="14px" height="14px" style="vertical-align: middle;"/>
+        </Button>
+        <Button size="XS" color="" invert rounded class="m-0" title="Bold (Ctrl/Cmd+B)" @click="wrapSelection('**')">
+          <Bold width="14px" height="14px" style="vertical-align: middle;"/>
+        </Button>
+        <Button size="XS" color="" invert rounded class="m-0" title="Italic (Ctrl/Cmd+I)" @click="wrapSelection('*')">
+          <Italic width="14px" height="14px" style="vertical-align: middle;"/>
+        </Button>
+        <Button size="XS" color="" invert rounded class="m-0" title="Link (Ctrl/Cmd+K)" @click="insertLink">
+          <Link width="14px" height="14px" style="vertical-align: middle;"/>
+        </Button>
+        <Button size="XS" color="" invert rounded class="m-0" title="Bulleted list" @click="prefixLines('- ')">
+          <List width="14px" height="14px" style="vertical-align: middle;"/>
+        </Button>
+        <Button size="XS" color="" invert rounded class="m-0" title="Numbered list" @click="prefixLines('1. ')">
+          <NumberedListLeft width="14px" height="14px" style="vertical-align: middle;"/>
+        </Button>
+        <Button size="XS" color="" invert rounded class="m-0" title="Quote" @click="prefixLines('> ')">
+          <Quote width="14px" height="14px" style="vertical-align: middle;"/>
+        </Button>
+        <Button size="XS" color="" invert rounded class="m-0" title="Inline code" @click="wrapSelection('`')">
+          <Code width="14px" height="14px" style="vertical-align: middle;"/>
+        </Button>
+      </span>
+      <span class="flex flex-wrap g-05 align-items-start justify-content-end">
+        <Button size="XS" color="" rounded class="m-0" :title="activeTab === 'plain' ? 'Showing the plain text you typed -- click to preview it as Markdown' : 'Showing rendered Markdown -- click to see the plain text you typed'" @click="toggleTab">{{ activeTab === 'plain' ? 'Plain' : 'MarkDown' }}</Button>
+      </span>
     </p>
     <textarea
-      v-show="activeTab === 'write'"
+      v-show="activeTab === 'plain'"
       ref="textareaRef"
       v-model="value"
       v-bind="$attrs"
@@ -220,7 +226,7 @@ function onKeydown(event) {
       :style="{ minHeight }"
       @keydown="onKeydown"
     ></textarea>
-    <div v-show="activeTab === 'preview'" class="markdown-editor-preview" :style="{ minHeight }">
+    <div v-show="activeTab === 'markdown'" class="markdown-editor-preview" :style="{ minHeight }">
       <MarkdownText v-if="value" :text="value"/>
       <p v-else class="grey-text m-0">Nothing to preview yet.</p>
     </div>
