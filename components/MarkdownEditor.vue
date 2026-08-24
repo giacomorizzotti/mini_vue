@@ -4,10 +4,20 @@ import { Bold, Italic, Link, List, NumberedListLeft, Quote, Code, TextSize } fro
 import Button from './Button.vue'
 import MarkdownText from './MarkdownText.vue'
 
-// Full Markdown editor: a toolbar-driven <textarea> plus a single Plain/
-// MarkDown toggle button, replacing a plain <textarea> wherever a
-// description/pin-body field is edited. See plans/MARKDOWN_EDITOR_DESIGN.md
-// (jpm repo) for the full design writeup this implements.
+// Full Markdown editor: a toolbar-driven <textarea>, replacing a plain
+// <textarea> wherever a description/pin-body field is edited. Two nested
+// toggles, both the same "single button, label names the current state"
+// shape:
+//  - mode ('markdown'/'plain') -- always visible. 'plain' hides the whole
+//    formatting toolbar (including the Write/Preview toggle below) down to
+//    a bare <textarea>, for anyone who just wants to type without dealing
+//    with Markdown at all. Nothing is stored differently either way --
+//    this only changes what the *editor* shows, not how the saved text is
+//    later rendered.
+//  - activeTab ('write'/'preview') -- only shown/relevant while
+//    mode === 'markdown'.
+// See plans/MARKDOWN_EDITOR_DESIGN.md (jpm repo) for the full design
+// writeup this implements.
 //
 // inheritAttrs: false + a manual v-bind="$attrs" on the <textarea> itself
 // (not the wrapping <div>) -- every call site this replaces has its own
@@ -46,11 +56,15 @@ const value = computed({
   set: (v) => emit('update:modelValue', v),
 })
 
-const activeTab = ref('plain')
+const mode = ref('markdown')
+const activeTab = ref('write')
 const textareaRef = ref(null)
 
+function toggleMode() {
+  mode.value = mode.value === 'markdown' ? 'plain' : 'markdown'
+}
 function toggleTab() {
-  activeTab.value = activeTab.value === 'plain' ? 'markdown' : 'plain'
+  activeTab.value = activeTab.value === 'write' ? 'preview' : 'write'
 }
 
 // Every toolbar action funnels through here: write the new full text, then
@@ -176,6 +190,7 @@ function insertLink() {
 }
 
 function onKeydown(event) {
+  if (mode.value !== 'markdown') return
   if (!(event.metaKey || event.ctrlKey)) return
   const key = event.key.toLowerCase()
   if (key === 'b') { event.preventDefault(); wrapSelection('**') }
@@ -187,7 +202,7 @@ function onKeydown(event) {
 <template>
   <div class="markdown-editor">
     <p class="bar m-0 mb-05 flex flex-wrap align-items-start justify-content-between gap-05">
-      <span class="flex flex-wrap gap-05 align-items-start justify-content-start">
+      <span v-if="mode === 'markdown'" class="flex flex-wrap gap-05 align-items-start justify-content-start">
         <Button size="XS" color="" invert rounded class="m-0" title="Heading (click to cycle H1–H4)" @click="cycleHeading">
           <TextSize width="14px" height="14px" style="vertical-align: middle;"/>
         </Button>
@@ -213,12 +228,14 @@ function onKeydown(event) {
           <Code width="14px" height="14px" style="vertical-align: middle;"/>
         </Button>
       </span>
+      <span v-else></span>
       <span class="flex flex-wrap g-05 align-items-start justify-content-end">
-        <Button size="XS" color="" rounded class="m-0" :title="activeTab === 'plain' ? 'Showing the plain text you typed -- click to preview it as Markdown' : 'Showing rendered Markdown -- click to see the plain text you typed'" @click="toggleTab">{{ activeTab === 'plain' ? 'Plain' : 'MarkDown' }}</Button>
+        <Button v-if="mode === 'markdown'" size="XS" color="" rounded class="m-0" :title="activeTab === 'write' ? 'Editing the raw text -- click to preview it as Markdown' : 'Previewing rendered Markdown -- click to go back to editing'" @click="toggleTab">{{ activeTab === 'write' ? 'Write' : 'Preview' }}</Button>
+        <Button size="XS" color="" rounded class="m-0" :title="mode === 'markdown' ? 'Markdown formatting is on -- click to switch to a plain textarea' : 'Plain textarea, no formatting -- click to turn Markdown formatting back on'" @click="toggleMode">{{ mode === 'markdown' ? 'MarkDown' : 'Plain' }}</Button>
       </span>
     </p>
     <textarea
-      v-show="activeTab === 'plain'"
+      v-show="mode === 'plain' || activeTab === 'write'"
       ref="textareaRef"
       v-model="value"
       v-bind="$attrs"
@@ -226,7 +243,7 @@ function onKeydown(event) {
       :style="{ minHeight }"
       @keydown="onKeydown"
     ></textarea>
-    <div v-show="activeTab === 'markdown'" class="markdown-editor-preview" :style="{ minHeight }">
+    <div v-show="mode === 'markdown' && activeTab === 'preview'" class="markdown-editor-preview" :style="{ minHeight }">
       <MarkdownText v-if="value" :text="value"/>
       <p v-else class="grey-text m-0">Nothing to preview yet.</p>
     </div>
