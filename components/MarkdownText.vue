@@ -14,16 +14,16 @@ const props = defineProps({
     type: String,
     default: '',
   },
-  // Mirrors MarkdownEditor.vue's own `markdown` prop -- the two are meant
-  // to be fed the same stored per-instance value (e.g. a model's
-  // `description_is_markdown`). false falls back to RichText.vue's own
-  // rendering (linkify: escaped, URLs auto-linked, newlines as <br>,
+  // Mirrors MarkdownEditor.vue's own `markdown` prop, default included --
+  // the two are meant to be fed the same stored per-instance value (e.g. a
+  // model's `description_is_markdown`). false falls back to RichText.vue's
+  // own rendering (linkify: escaped, URLs auto-linked, newlines as <br>,
   // nothing else) instead of parsing as Markdown, so a field someone
   // deliberately wrote as plain text never gets a stray `#`/`*`/`-`
   // reinterpreted as formatting here.
   markdown: {
     type: Boolean,
-    default: true,
+    default: false,
   },
 })
 

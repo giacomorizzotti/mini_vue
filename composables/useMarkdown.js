@@ -106,14 +106,15 @@ export function renderMarkdown(text) {
 // spaces -- a compact-card preview only ever needs "the words", not the
 // original block structure.
 //
-// `isMarkdown = false` (mirrors MarkdownEditor.vue/MarkdownText.vue's own
-// `markdown` prop) skips rendering entirely and returns `text` as-is --
-// routing plain text through renderMarkdown() first would let a stray
-// `#`/`*`/`-` get reinterpreted as formatting and then stripped away by
-// this very function, silently eating characters the person actually
-// typed. TruncatedText.vue's own :limit prop still truncates it afterward
-// either way, same as the Markdown branch.
-export function markdownToPlainText(text, isMarkdown = true) {
+// `isMarkdown` (default false, mirrors MarkdownEditor.vue/MarkdownText.vue's
+// own `markdown` prop and its default) -- true is the only case that runs
+// text through the Markdown pipeline at all; the default skips rendering
+// entirely and returns `text` as-is, since routing plain text through
+// renderMarkdown() first would let a stray `#`/`*`/`-` get reinterpreted as
+// formatting and then stripped away by this very function, silently eating
+// characters the person actually typed. TruncatedText.vue's own :limit prop
+// still truncates it afterward either way, same as the Markdown branch.
+export function markdownToPlainText(text, isMarkdown = false) {
   if (!isMarkdown) return text ?? ''
   const html = renderMarkdown(text)
   if (!html) return ''
