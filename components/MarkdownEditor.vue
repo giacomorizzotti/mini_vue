@@ -87,13 +87,25 @@ function toggleTab() {
 // can't be set against content that isn't there yet) restore focus and
 // select whatever range makes sense for that action, so typing can
 // continue immediately instead of the cursor jumping to the end.
+//
+// scrollTop is captured before the value write and restored explicitly
+// afterward -- setting a textarea's .value natively resets its selection
+// to the very end of the new text, and el.focus() then scrolls to reveal
+// *that* (wrong) position before setSelectionRange() below corrects the
+// cursor back to where the edit actually happened; the scroll itself
+// never follows that correction, so without this a click on any toolbar
+// button while editing a long note yanks the view down to the bottom
+// regardless of where the cursor/edit actually was.
 function setValueAndSelect(newValue, selStart, selEnd) {
+  const el = textareaRef.value
+  const scrollTop = el ? el.scrollTop : null
   value.value = newValue
   nextTick(() => {
     const el = textareaRef.value
     if (!el) return
     el.focus()
     el.setSelectionRange(selStart, selEnd)
+    if (scrollTop !== null) el.scrollTop = scrollTop
   })
 }
 
@@ -255,6 +267,7 @@ function onKeydown(event) {
       v-model="value"
       v-bind="$attrs"
       :placeholder="placeholder"
+      style="min-width: 100%; max-width: 100%"
       :style="{ minHeight }"
       @keydown="onKeydown"
     ></textarea>
