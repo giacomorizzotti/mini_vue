@@ -124,7 +124,7 @@ onUnmounted(() => {
         <Container ref="rootEl" v-show="visible" fw class="subnav-box full-page-container" :class="`subnav-layer-${layer}`">
             <div v-if="layer === 1" class="subnav-black-layer" @click="handleBackdropClick()"></div>
             <Boxes class="subnav-click-layer justify-content-start align-items-start z-3" fh>
-                <Box padding="2" background="white" class="ps-2 pe-5 box-shadow subnav-content-wrapper">
+                <Box background="white" class="pe-5 box-shadow subnav-content-wrapper">
                     <p class="m-0 right" style="position: absolute; right: calc( var(--margin) * 1.5 ); top: calc( var(--margin) * 1.5 );">
                         <a class="pointer black-text">
                             <XmarkCircle width="32px" height="32px" class="m-0" @click="emit('close');" style="background-color: var(--white); border-radius: 50%; box-shadow: 0 0 5px 5px var(--white)"/>

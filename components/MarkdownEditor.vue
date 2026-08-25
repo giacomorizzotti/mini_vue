@@ -257,8 +257,8 @@ function onKeydown(event) {
       </span>
       <span v-else></span>
       <span class="flex flex-wrap g-05 align-items-start justify-content-end">
-        <Button v-if="markdown" size="XS" color="" rounded class="m-0" :title="activeTab === 'write' ? 'Editing the raw text -- click to preview it as Markdown' : 'Previewing rendered Markdown -- click to go back to editing'" @click="toggleTab">{{ activeTab === 'write' ? 'Write' : 'Preview' }}</Button>
-        <Button size="XS" color="" rounded class="m-0" :title="markdown ? 'Markdown formatting is on -- click to switch to a plain textarea' : 'Plain textarea, no formatting -- click to turn Markdown formatting back on'" @click="toggleMode">{{ markdown ? 'MarkDown' : 'Plain' }}</Button>
+        <Button v-if="markdown" size="XS" color="" :active="activeTab === 'preview'" rounded class="m-0" :title="activeTab === 'write' ? 'Editing the raw text -- click to preview it as Markdown' : 'Previewing rendered Markdown -- click to go back to editing'" @click="toggleTab">{{ activeTab === 'write' ? 'Write' : 'Preview' }}</Button>
+        <Button size="XS" color="grey" rounded invert class="m-0" :title="markdown ? 'Markdown formatting is on -- click to switch to a plain textarea' : 'Plain textarea, no formatting -- click to turn Markdown formatting back on'" @click="toggleMode">{{ markdown ? 'Plain' : 'MarkDown' }}</Button>
       </span>
     </p>
     <textarea
