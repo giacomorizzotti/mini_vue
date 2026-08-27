@@ -2,6 +2,12 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { Xmark } from '@iconoir/vue'
 
+// Same pattern as MarkdownEditor.vue's own inner <textarea>: fallthrough
+// attrs (class, id, disabled, ...) forward onto the actual <input> rather
+// than the wrapping .autocomplete div, so a caller's own utility classes or
+// a <label for="..."> still land where they'd expect on a plain <input>.
+defineOptions({ inheritAttrs: false })
+
 const props = defineProps({
   modelValue: {
     type: [Number, String],
@@ -104,10 +110,11 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
 </script>
 
 <template>
-  <div ref="rootEl" class="autocomplete">
+  <div ref="rootEl" class="autocomplete flex-grow">
     <input
       type="text"
       v-model="query"
+      v-bind="$attrs"
       :class="{ 'has-clear': query }"
       :placeholder="placeholder"
       autocomplete="off"
