@@ -239,4 +239,14 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
+// Links inside the banner sit on a dark background, so override the global
+// link color (var(--link-color) is typically dark) to white here.
+.cookie-banner-content a {
+  color: var(--white);
+  text-decoration: underline;
+  &:hover {
+    color: var(--white);
+    opacity: 0.75;
+  }
+}
 </style>
