@@ -1,6 +1,5 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
 import { HalfCookie } from '@iconoir/vue'
 
 // ── Emits ────────────────────────────────────────────────────────────────────
@@ -14,6 +13,12 @@ const emit = defineEmits(['accept', 'deny'])
 // translations: merge with (or extend) the built-in strings for buttons /
 //               status text; use #title and #description slots for the body.
 //
+// privacyUrl / cookieUrl: pass the full URL (or path) for the policy links
+//   rendered in the default description slot.  Plain <a href> is used so
+//   the component works regardless of whether a project uses named routes,
+//   hash routing, or no Vue Router at all.  Omit either prop and the
+//   corresponding link is simply not rendered.
+//
 // Slot usage — inject custom content per project:
 //   <GDPR>
 //     <template #title>Your heading</template>
@@ -24,6 +29,8 @@ const emit = defineEmits(['accept', 'deny'])
 const props = defineProps({
   lang:         { type: String, default: null },
   translations: { type: Object, default: () => ({}) },
+  privacyUrl:   { type: String, default: null },
+  cookieUrl:    { type: String, default: null },
 })
 
 // ── i18n ──────────────────────────────────────────────────────────────────────
@@ -221,8 +228,11 @@ onMounted(() => {
           <slot name="description">
             {{ t('desc') }}<br/>
             {{ t('changeNote') }}<br/>
-            <RouterLink :to="{ name: 'privacy-policy' }">{{ t('privacyLink') }}</RouterLink> ·
-            <RouterLink :to="{ name: 'cookie-policy' }">{{ t('cookieLink') }}</RouterLink>
+            <template v-if="privacyUrl || cookieUrl">
+              <a v-if="privacyUrl" :href="privacyUrl">{{ t('privacyLink') }}</a>
+              <template v-if="privacyUrl && cookieUrl"> · </template>
+              <a v-if="cookieUrl" :href="cookieUrl">{{ t('cookieLink') }}</a>
+            </template>
           </slot>
         </p>
       </div>
