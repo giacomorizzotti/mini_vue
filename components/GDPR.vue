@@ -36,8 +36,8 @@ const props = defineProps({
 // ── i18n ──────────────────────────────────────────────────────────────────────
 const TRANSLATIONS = {
   it: {
-    title:         'Utilizziamo cookie analitici',
-    desc:          'Questo sito utilizza cookie analitici di terze parti per misurare le visite e migliorare l\'esperienza di navigazione. I dati sono raccolti in forma anonima e aggregata. Nessun cookie analitico viene salvato senza il tuo consenso esplicito.',
+    title:         'Utilizziamo strumenti di analisi',
+    desc:          'Questo sito utilizza strumenti di analisi di terze parti per misurare le visite e migliorare l\'esperienza di navigazione. I dati raccolti possono includere informazioni anonime come le pagine visitate, la provenienza e il tipo di dispositivo. Nessuno strumento di analisi viene attivato senza il tuo consenso esplicito.',
     changeNote:    'Puoi modificare le tue preferenze in qualsiasi momento cliccando sull\'icona 🍪 in basso.',
     privacyLink:   'Privacy policy',
     cookieLink:    'Cookie policy',
@@ -48,8 +48,8 @@ const TRANSLATIONS = {
     statusDenied:  'no',
   },
   en: {
-    title:         'We use analytics cookies',
-    desc:          'This site uses third-party analytics cookies to measure visits and improve your browsing experience. Data is collected in anonymous and aggregated form. No analytics cookie is saved without your explicit consent.',
+    title:         'We use analytics tools',
+    desc:          'This site uses third-party analytics tools to measure visits and improve your browsing experience. Data collected may include anonymous information such as pages visited, referral source, and device type. No analytics tool is activated without your explicit consent.',
     changeNote:    'You can update your preferences at any time by clicking the 🍪 icon below.',
     privacyLink:   'Privacy policy',
     cookieLink:    'Cookie policy',
@@ -60,8 +60,8 @@ const TRANSLATIONS = {
     statusDenied:  'no',
   },
   fr: {
-    title:         'Nous utilisons des cookies analytiques',
-    desc:          'Ce site utilise des cookies analytiques tiers pour mesurer les visites et améliorer votre expérience de navigation. Les données sont collectées de façon anonyme et agrégée. Aucun cookie analytique n\'est enregistré sans votre consentement explicite.',
+    title:         'Nous utilisons des outils d\'analyse',
+    desc:          'Ce site utilise des outils d\'analyse tiers pour mesurer les visites et améliorer votre expérience de navigation. Les données collectées peuvent inclure des informations anonymes telles que les pages visitées, la source de provenance et le type d\'appareil. Aucun outil d\'analyse n\'est activé sans votre consentement explicite.',
     changeNote:    'Vous pouvez modifier vos préférences à tout moment en cliquant sur l\'icône 🍪 ci-dessous.',
     privacyLink:   'Politique de confidentialité',
     cookieLink:    'Politique de cookies',
@@ -72,8 +72,8 @@ const TRANSLATIONS = {
     statusDenied:  'non',
   },
   de: {
-    title:         'Wir verwenden Analyse-Cookies',
-    desc:          'Diese Website verwendet Analyse-Cookies von Drittanbietern, um Besuche zu messen und die Nutzererfahrung zu verbessern. Die Daten werden anonym und aggregiert erfasst. Ohne deine ausdrückliche Zustimmung wird kein Analyse-Cookie gespeichert.',
+    title:         'Wir verwenden Analyse-Tools',
+    desc:          'Diese Website verwendet Analyse-Tools von Drittanbietern, um Besuche zu messen und die Nutzererfahrung zu verbessern. Erfasst werden können anonyme Informationen wie besuchte Seiten, Herkunftsquelle und Gerätetyp. Ohne deine ausdrückliche Zustimmung wird kein Analyse-Tool aktiviert.',
     changeNote:    'Du kannst deine Einstellungen jederzeit über das 🍪-Symbol unten ändern.',
     privacyLink:   'Datenschutzerklärung',
     cookieLink:    'Cookie-Richtlinie',
