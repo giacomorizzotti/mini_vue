@@ -91,7 +91,16 @@ function handleBlur() {
 }
 
 function handleClickOutside(event) {
-  if (rootEl.value && !rootEl.value.contains(event.target)) {
+  // event.composedPath(), not .contains(event.target) -- see
+  // MultiAutocomplete.vue's matching handleClickOutside for why: a DOM
+  // mutation between two listeners of the same bubbling click event can
+  // leave event.target detached, and a detached node's .contains() check
+  // is always false. Currently harmless here (selectOption already forces
+  // isOpen closed regardless), but it's the identical latent bug, fixed
+  // the same way for when that assumption changes.
+  const path = event.composedPath ? event.composedPath() : null
+  const isInside = rootEl.value && (path ? path.includes(rootEl.value) : rootEl.value.contains(event.target))
+  if (!isInside) {
     isOpen.value = false
   }
 }

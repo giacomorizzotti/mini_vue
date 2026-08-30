@@ -89,7 +89,20 @@ function handleKeydown(event) {
 }
 
 function handleClickOutside(event) {
-  if (rootEl.value && !rootEl.value.contains(event.target)) {
+  // Selecting an option removes it from filteredOptions, which Vue can
+  // patch out of the DOM before this same click event finishes bubbling up
+  // to window (the browser runs a microtask checkpoint, flushing Vue's
+  // reactivity queue, between each listener in a single event's dispatch)
+  // -- by the time this runs, event.target may already be the now-detached
+  // <li>, and a detached node's .contains() check against anything is
+  // always false, misreading a perfectly-inside click as "outside" and
+  // closing the dropdown right after every single selection.
+  // event.composedPath() instead reflects the DOM tree structure at the
+  // moment the event was dispatched, unaffected by that mid-dispatch
+  // removal, so it still correctly reports the click as inside.
+  const path = event.composedPath ? event.composedPath() : null
+  const isInside = rootEl.value && (path ? path.includes(rootEl.value) : rootEl.value.contains(event.target))
+  if (!isInside) {
     isOpen.value = false
   }
 }
@@ -134,7 +147,7 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
 
 .autocomplete-options {
   position: absolute;
-  top: 100%;
+  top: calc( 100% + var(--margin) / 2);
   left: 0;
   right: 0;
   z-index: 10;
