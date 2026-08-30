@@ -43,7 +43,7 @@ const props = defineProps({
 const TRANSLATIONS = {
   it: {
     title:         'Utilizziamo strumenti di analisi',
-    desc:          'Questo sito utilizza strumenti di analisi di terze parti per misurare le visite e migliorare l\'esperienza di navigazione. I dati raccolti possono includere informazioni anonime come le pagine visitate, la provenienza e il tipo di dispositivo. Nessuno strumento di analisi viene attivato senza il tuo consenso esplicito.',
+    desc:          'Questo sito utilizza strumenti di analisi auto-ospitati e privacy-first per misurare le visite e migliorare l\'esperienza di navigazione. I dati raccolti sono anonimi e aggregati: non vengono impostati cookie di profilazione e nessuno strumento viene attivato senza il tuo consenso esplicito.',
     changeNote:    'Puoi modificare le tue preferenze in qualsiasi momento cliccando sull\'icona 🍪 in basso.',
     privacyLink:   'Privacy policy',
     cookieLink:    'Cookie policy',
@@ -55,7 +55,7 @@ const TRANSLATIONS = {
   },
   en: {
     title:         'We use analytics tools',
-    desc:          'This site uses third-party analytics tools to measure visits and improve your browsing experience. Data collected may include anonymous information such as pages visited, referral source, and device type. No analytics tool is activated without your explicit consent.',
+    desc:          'This site uses self-hosted, privacy-first analytics tools to measure visits and improve your browsing experience. Data collected is anonymous and aggregated: no profiling cookies are set, and no analytics tool is activated without your explicit consent.',
     changeNote:    'You can update your preferences at any time by clicking the 🍪 icon below.',
     privacyLink:   'Privacy policy',
     cookieLink:    'Cookie policy',
