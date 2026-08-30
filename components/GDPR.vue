@@ -31,6 +31,12 @@ const props = defineProps({
   translations: { type: Object, default: () => ({}) },
   privacyUrl:   { type: String, default: null },
   cookieUrl:    { type: String, default: null },
+  // version: set to an ISO date string when the policy changes materially
+  //   (e.g. '2026-08-30'). Cookie is stored as 'granted:VERSION' / 'denied:VERSION'.
+  //   On mount, if the stored version doesn't match this prop the banner re-shows,
+  //   asking for fresh consent. Default '' keeps the old plain 'granted'/'denied'
+  //   behavior so existing consumers that don't pass this prop are unaffected.
+  version:      { type: String, default: '' },
 })
 
 // ── i18n ──────────────────────────────────────────────────────────────────────
@@ -122,9 +128,26 @@ const overlayFading = ref(false)
 
 function readStatus() {
   const raw = getCookie(COOKIE_NAME)
+  if (!raw) return null
   if (raw === 'yes') return 'granted'   // v1 localStorage migration
   if (raw === 'no')  return 'denied'
-  return raw  // 'granted' | 'denied' | null
+  if (props.version) {
+    // Versioned cookie: stored as 'granted:2026-08-30' or 'denied:2026-08-30'.
+    // A plain 'granted'/'denied' (no colon) is pre-versioning consent —
+    // treat as stale so the user is re-asked under the new policy version.
+    const colon = raw.indexOf(':')
+    if (colon === -1) return null
+    const decision = raw.slice(0, colon)
+    const stored   = raw.slice(colon + 1)
+    if (stored !== props.version) return null   // version mismatch → re-ask
+    return decision === 'granted' ? 'granted'
+         : decision === 'denied'  ? 'denied'
+         : null
+  }
+  // No version prop → legacy: accept plain 'granted' / 'denied'
+  return raw === 'granted' ? 'granted'
+       : raw === 'denied'  ? 'denied'
+       : null
 }
 
 const status     = computed(readStatus)
@@ -150,7 +173,7 @@ function hideOverlay() {
 
 // ── Actions ──────────────────────────────────────────────────────────────────
 function accept() {
-  setCookie(COOKIE_NAME, 'granted', COOKIE_DAYS)
+  setCookie(COOKIE_NAME, props.version ? `granted:${props.version}` : 'granted', COOKIE_DAYS)
   document.body.classList.remove('consent-pending')
   hideOverlay()
   bannerState.value = 'mini'
@@ -158,7 +181,7 @@ function accept() {
 }
 
 function deny() {
-  setCookie(COOKIE_NAME, 'denied', COOKIE_DAYS)
+  setCookie(COOKIE_NAME, props.version ? `denied:${props.version}` : 'denied', COOKIE_DAYS)
   document.body.classList.remove('consent-pending')
   hideOverlay()
   bannerState.value = 'mini'
