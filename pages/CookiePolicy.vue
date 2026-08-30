@@ -1,6 +1,6 @@
 <script setup>
 
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useMessage } from '@/mini/composables/useMessage'
 import Container from '@/mini/components/Container.vue'
 import Boxes from '@/mini/components/Boxes.vue'
@@ -15,22 +15,45 @@ import { OWNER } from '@/config/owner'
 // keys exist.
 const props = defineProps({
   services: { type: String, default: '' },
+  // See PrivacyPolicy.vue's own matching prop for the full reasoning --
+  // same auto-detect-from-<html lang> convention, same it/en-only fallback
+  // (fr/de resolve to English, never the API's own bare "not literally
+  // en -> it" default).
+  lang: { type: String, default: null },
 })
 
 const { showMessage } = useMessage()
 const privacyHtml = ref('')
 
-onMounted(async () => {
+function resolveApiLang() {
+  const detected = props.lang ?? document.documentElement.lang?.split('-')[0] ?? 'it'
+  return detected === 'it' ? 'it' : 'en'
+}
+
+async function load() {
   try {
     const url = new URL('https://api.uwa.agency/cookie-policy/')
     Object.entries(OWNER).forEach(([k, v]) => url.searchParams.set(k, v))
     if (props.services) url.searchParams.set('services', props.services)
+    url.searchParams.set('lang', resolveApiLang())
     const response = await fetch(url)
     privacyHtml.value = await response.text()
   } catch (error) {
     showMessage('Errore nel caricamento della cookie policy.', 'danger')
   }
+}
+
+// <html lang> can change in place (no route change/remount) when a
+// consumer's own language switcher runs -- watch it so an in-page switch
+// updates the shown policy language too, not just a hard reload.
+let observer
+onMounted(() => {
+  load()
+  observer = new MutationObserver(load)
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] })
 })
+onBeforeUnmount(() => observer?.disconnect())
+watch(() => props.lang, load)
 
 </script>
 
