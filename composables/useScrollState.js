@@ -6,9 +6,12 @@ function onScroll() {
   isScrolled.value = window.scrollY > 0
 }
 
-export function useScrollState() {
-  onMounted(() => window.addEventListener('scroll', onScroll))
-  onUnmounted(() => window.removeEventListener('scroll', onScroll))
+export function useScrollState(onScrollCallback = null) {
+  const handler = onScrollCallback
+    ? () => { onScroll(); onScrollCallback() }
+    : onScroll
+  onMounted(() => window.addEventListener('scroll', handler, { passive: true }))
+  onUnmounted(() => window.removeEventListener('scroll', handler))
   const scrollClass = computed(() => (isScrolled.value ? 'scrolled' : 'top'))
   return { scrollClass }
 }

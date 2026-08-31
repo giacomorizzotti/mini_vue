@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useMenuState } from '@/mini/composables/useMenuState'
+import { useScrollState } from '@/mini/composables/useScrollState'
 
 const { menuStateClass, menuClose } = useMenuState()
 
@@ -10,6 +11,10 @@ const props = defineProps({
     default: null
   },
   menuCloseOnClick: {
+    type: [Boolean],
+    default: false
+  },
+  menuCloseOnScroll: {
     type: [Boolean],
     default: false
   },
@@ -48,6 +53,8 @@ const visibleMenuItems = computed(() => {
     return true
   })
 })
+
+useScrollState(props.menuCloseOnScroll ? menuClose : null)
 
 const processedMenuClose = (event) => {
   // Only scroll back to top for an actual navigation (a real <a>, e.g. a
