@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router'
 import Boxes from '@/mini/components/Boxes.vue';
 import Box from '@/mini/components/Box.vue';
 import MenuToggle from '@/mini/components/MenuToggle.vue';
-import Menu from '@/mini/components/PageMenu.vue';
+import PageMenu from '@/mini/components/PageMenu.vue';
 import { useMenuState } from '@/mini/composables/useMenuState'
 const { menuStateClass } = useMenuState()
 import { useScrollState } from '@/mini/composables/useScrollState'
@@ -59,7 +59,7 @@ watch(() => route.fullPath, updateHeaderMenuPresence)
   <Box id="head-menus" :class="headerMenuClasses">
     <Boxes class="g-0 align-items-center">
       <Box v-if="headerMenuPresence" id="header-menu-box" class="p-0">
-        <Menu id="page-menu" :invert="props.invert"/>
+        <PageMenu id="page-menu" :invert="props.invert"/>
       </Box>
       <Box v-if="menuToggle">
         <MenuToggle/>
