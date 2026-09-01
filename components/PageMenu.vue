@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { useMenuState } from '@/mini/composables/useMenuState'
 const { menuStateClass } = useMenuState()
 import { useScrollState } from '@/mini/composables/useScrollState'
+import { PageSearch } from '@iconoir/vue'
 const { scrollClass } = useScrollState()
 
 const props = defineProps({
@@ -84,8 +85,12 @@ onUnmounted(() => { if (observer) observer.disconnect() })
 </script>
 
 <template>
-  <nav class="menu" :class="menuClass">
-    <ul class="menu m-0" :class="directionClass">
+  <nav id="page-menu" class="menu" :class="menuClass">
+    <ul class="menu page-menu m-0" :class="directionClass">
+      <li class="icon flex flex-column">
+        <PageSearch width="20px" height="20px"style="vertical-align: middle;"/>
+        <span class="XXS color-text">IN PAGE</span>
+      </li>
       <li
         v-for="item in menuItems"
         class="item"
@@ -99,4 +104,27 @@ onUnmounted(() => { if (observer) observer.disconnect() })
 </template>
 
 <style lang="scss" scoped>
+#page-menu ul.page-menu {
+  background-color: rgba(255, 255, 255, 0.25);
+  border: 1px solid var(--white);
+  @media screen and (min-width: 768px) {
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  li.icon {
+    justify-content: center;
+    background: var(--white);
+    padding: calc(var(--padding) * 0.5) var(--padding) 0;
+    margin: 0 0 0 var(--margin);
+    @media screen and (min-width: 768px) {
+      margin: 0;
+    }
+  }
+  li a {
+    padding: calc(var(--padding) * 0.5);
+    &::after {
+      bottom: 2px;
+    }
+  }
+}
 </style>

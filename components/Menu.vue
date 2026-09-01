@@ -1,8 +1,8 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useMenuState } from '@/mini/composables/useMenuState'
 
-const { menuStateClass, menuClose } = useMenuState()
+const { isMenuOpen, menuStateClass, menuClose } = useMenuState()
 
 const props = defineProps({
   menuItems: {
@@ -10,6 +10,10 @@ const props = defineProps({
     default: null
   },
   menuCloseOnClick: {
+    type: [Boolean],
+    default: false
+  },
+  menuCloseOnScroll: {
     type: [Boolean],
     default: false
   },
@@ -47,6 +51,18 @@ const visibleMenuItems = computed(() => {
 
     return true
   })
+})
+
+// menuCloseOnScroll: arm a one-shot scroll listener each time the menu opens,
+// delayed by 150ms so the click/tap that opened it doesn't immediately trigger
+// it. { once: true } self-removes after the first real scroll — reopening the
+// menu re-arms it. A persistent listener caused a double-click-to-open bug.
+watch(isMenuOpen, (open) => {
+  if (open && props.menuCloseOnScroll) {
+    setTimeout(() => {
+      window.addEventListener('scroll', menuClose, { passive: true, once: true })
+    }, 150)
+  }
 })
 
 const processedMenuClose = (event) => {

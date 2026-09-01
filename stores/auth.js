@@ -154,33 +154,61 @@ export const useAuthStore = defineStore('auth', () => {
 
     // RFC 6749 §6 — form-encoded grant_type=refresh_token against the same
     // OAuth2 token endpoint used for login (this server doesn't speak simplejwt).
+    //
+    // The auth server rotates refresh tokens (ROTATE_REFRESH_TOKEN=True) --
+    // each use invalidates the old one and issues a new one. authFetch()
+    // below calls this on every 401/403, and ensureValidToken() calls it
+    // pre-emptively near expiry on *every* authFetch -- a single page load
+    // fires many authFetch calls in parallel, so near a token's natural
+    // expiry (or right after a burst of legitimate-but-401/403 responses)
+    // several of them can all decide "needs refresh" at once. Without the
+    // in-flight dedup below, two concurrent calls both read the same
+    // refresh_token, the auth server grants the first and rotates it away,
+    // and the second's now-stale token gets rejected (400 invalid_grant) --
+    // whose failure branch used to call clearSession(), wiping out the
+    // *winner's* just-persisted valid tokens and silently logging the user
+    // out seconds after a successful refresh. Sharing one in-flight promise
+    // across every concurrent caller (instead of one request per caller)
+    // is the standard fix: no request ever races another for the same
+    // refresh_token.
+    let refreshPromise = null
+
     async function refreshAccessToken() {
         if (!refreshToken.value) return false
+        if (refreshPromise) return refreshPromise
 
-        const formData = tokenFormData({
-            grant_type: 'refresh_token',
-            refresh_token: refreshToken.value,
-        })
+        refreshPromise = (async () => {
+            try {
+                const formData = tokenFormData({
+                    grant_type: 'refresh_token',
+                    refresh_token: refreshToken.value,
+                })
 
-        const response = await fetch(OAUTH_TOKEN_ENDPOINT, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: formData.toString(),
-        })
+                const response = await fetch(OAUTH_TOKEN_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData.toString(),
+                })
 
-        const payload = await response.json().catch(() => ({}))
+                const payload = await response.json().catch(() => ({}))
 
-        if (!response.ok || !payload.access_token) {
-            clearSession()
-            return false
-        }
+                if (!response.ok || !payload.access_token) {
+                    clearSession()
+                    return false
+                }
 
-        persistTokens({
-            accessTokenValue: payload.access_token,
-            refreshTokenValue: payload.refresh_token || refreshToken.value,
-            expiresInSeconds: payload.expires_in,
-        })
-        return true
+                persistTokens({
+                    accessTokenValue: payload.access_token,
+                    refreshTokenValue: payload.refresh_token || refreshToken.value,
+                    expiresInSeconds: payload.expires_in,
+                })
+                return true
+            } finally {
+                refreshPromise = null
+            }
+        })()
+
+        return refreshPromise
     }
 
     // RFC 7662 token introspection — ask the auth server whether the current
