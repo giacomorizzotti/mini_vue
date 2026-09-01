@@ -105,15 +105,14 @@ onUnmounted(() => { if (observer) observer.disconnect() })
 
 <style lang="scss" scoped>
 #page-menu ul.page-menu {
-  background-color: rgba(255, 255, 255, 0.25);
-  border: 1px solid var(--white);
   @media screen and (min-width: 768px) {
+    background-color: rgba(255, 255, 255, 0.85);
+    border: 1px solid var(--white);
     border-radius: 5px;
     overflow: hidden;
   }
   li.icon {
     justify-content: center;
-    background: var(--white);
     padding: calc(var(--padding) * 0.5) var(--padding) 0;
     margin: 0 0 0 var(--margin);
     @media screen and (min-width: 768px) {
