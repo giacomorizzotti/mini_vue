@@ -72,3 +72,26 @@ export function distinctBoxSizes(labels, containerWidth) {
   }
   return result
 }
+
+/**
+ * A literal, non-tiered width style for an arbitrary percentage -- the
+ * same flex-basis/max-width/gap-compensation formula mini's own Sass
+ * box-width() mixin uses (_box.scss), for a caller that needs a specific
+ * percentage none of mini's named box-* tiers happen to offer (they only
+ * ever provide their own hand-tuned, breakpoint-gated set -- see
+ * resolveBoxWidth's own docs). Bypasses the tier system entirely: this
+ * renders at exactly `percent` regardless of container/viewport width, so
+ * a caller reaching for this over a named box-* class should already have
+ * its own reason not to want that tiering (e.g. jpm's
+ * useMinifiableGridColumns).
+ *
+ * @param {number} percent - 0-100
+ * @returns {{flexBasis: string, maxWidth: string}}
+ */
+export function rawBoxStyle(percent) {
+  const gapFactor = 100 - percent
+  return {
+    flexBasis: `calc(${percent}% - var(--gap-x) * ${gapFactor} * 0.01)`,
+    maxWidth: `${percent}%`,
+  }
+}
