@@ -62,6 +62,14 @@ const showCreateOption = computed(() =>
 function selectOption(option) {
   emit('update:modelValue', [...props.modelValue, option.id])
   query.value = ''
+  // Closes the dropdown after a pick, matching createOption() below --
+  // needs its own @click="isOpen = true" on the input (see template) to
+  // stay a single click to reopen: the <li>'s @mousedown.prevent keeps the
+  // input focused through a selection (so @blur doesn't fire mid-click and
+  // break it), which means the input never actually loses focus here --
+  // @focus alone wouldn't refire on a click that isn't a real focus
+  // transition, so reopening would otherwise need a click away and back.
+  isOpen.value = false
 }
 
 function removeOption(id) {
@@ -120,6 +128,7 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
       autocomplete="off"
       @input="isOpen = true"
       @focus="isOpen = true"
+      @click="isOpen = true"
       @blur="isOpen = false"
       @keydown="handleKeydown"
     />

@@ -49,6 +49,11 @@ const filteredOptions = computed(() => {
 function selectOption(option) {
   emit('update:modelValue', option.id)
   query.value = option.label
+  // Needs the input's own @click="isOpen = true" (see template) to stay a
+  // single click to reopen afterward -- @mousedown.prevent on each <li>
+  // keeps the input focused through a selection, so it never actually
+  // loses focus here, and @focus alone doesn't refire on a click that
+  // isn't a real focus transition. Same fix as MultiAutocomplete.vue's.
   isOpen.value = false
 }
 
@@ -129,6 +134,7 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
       autocomplete="off"
       @input="handleInput"
       @focus="isOpen = true"
+      @click="isOpen = true"
       @blur="handleBlur"
       @keydown="handleKeydown"
     />
