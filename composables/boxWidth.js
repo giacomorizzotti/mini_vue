@@ -5,13 +5,22 @@
 const BOX_WIDTH_BREAKPOINTS = [0, 576, 768, 992, 1400] // px: zero, sm, md, lg, xl
 
 const BOX_WIDTHS = {
-  8: [100, 50, 33.333333, 16.666666, 8.333333],
-  10: [100, 50, 20, 20, 10],
-  12: [100, 50, 25, 25, 12.5],
-  15: [100, 50, 25, 20, 15],
-  16: [100, 50, 33.333333, 16.666666, 16.666666],
-  20: [100, 50, 50, 20, 20],
-  25: [100, 50, 50, 25, 25],
+  // 8/10/12/15/16/20/25 don't follow the "100% until sm, 50% until md" shape
+  // every other label below does -- verified 2026-09-08 against the real
+  // _box.scss $box-widths map after a real, live discrepancy surfaced
+  // (jpm's Dashboard next-tasks grid using label 25/20/16 rendered a
+  // genuinely different width than this table predicted, corrupting both
+  // effectiveColumns() and hasDistinctColumns()/cycleColumns() for anyone
+  // using those labels). These finer-grained labels are meant for
+  // small/dense items that don't need to go full-width even on the
+  // narrowest "zero" tier, unlike every coarser label from 30 up.
+  8: [33.333333, 33.333333, 33.333333, 16.666666, 8.333333],
+  10: [20, 20, 20, 20, 10],
+  12: [25, 25, 25, 25, 12.5],
+  15: [30, 30, 30, 30, 15],
+  16: [33.333333, 33.333333, 33.333333, 16.666666, 16.666666],
+  20: [50, 50, 50, 20, 20],
+  25: [50, 50, 50, 25, 25],
   30: [100, 50, 50, 30, 30],
   33: [100, 50, 33.333333, 33.333333, 33.333333],
   40: [100, 50, 40, 40, 40],
