@@ -31,7 +31,7 @@ const emit = defineEmits(['update:currentPage'])
   <div class="pagination flex flex-wrap align-items-center" v-if="totalPages > 1">
     <Button
       :size="size"
-      class="my-0 me-05"
+      class="m-0"
       invert
       :disabled="currentPage === 1"
       :class="currentPage === 1 ? 'light-grey-btn' : ''"
@@ -52,7 +52,7 @@ const emit = defineEmits(['update:currentPage'])
     <p class="my-0 m-1 S grey-text">{{ currentPage }} / {{ totalPages }}</p>
     <Button
       :size="size"
-      class="my-0 me-05"
+      class="m-0"
       invert
       :disabled="currentPage === totalPages"
       :class="currentPage === totalPages ? 'light-grey-btn' : ''"
