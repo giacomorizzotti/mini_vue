@@ -89,7 +89,7 @@ onUnmounted(() => { if (observer) observer.disconnect() })
     <ul class="menu page-menu m-0" :class="directionClass">
       <li class="icon flex flex-column">
         <PageSearch width="20px" height="20px"style="vertical-align: middle;"/>
-        <span class="XXS color-text">IN PAGE</span>
+        <span class="XXS icon-label">IN PAGE</span>
       </li>
       <li
         v-for="item in menuItems"
@@ -104,26 +104,4 @@ onUnmounted(() => { if (observer) observer.disconnect() })
 </template>
 
 <style lang="scss" scoped>
-#page-menu ul.page-menu {
-  @media screen and (min-width: 768px) {
-    background-color: rgba(255, 255, 255, 0.85);
-    border: 1px solid var(--white);
-    border-radius: 5px;
-    overflow: hidden;
-  }
-  li.icon {
-    justify-content: center;
-    padding: calc(var(--padding) * 0.5) var(--padding) 0;
-    margin: 0 0 0 var(--margin);
-    @media screen and (min-width: 768px) {
-      margin: 0;
-    }
-  }
-  li a {
-    padding: calc(var(--padding) * 0.5);
-    &::after {
-      bottom: 2px;
-    }
-  }
-}
 </style>
