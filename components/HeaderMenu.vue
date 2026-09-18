@@ -61,6 +61,19 @@ watch(() => route.fullPath, updateHeaderMenuPresence)
       <Box v-if="headerMenuPresence" id="header-menu-box" class="p-0">
         <PageMenu id="page-menu" :invert="props.invert"/>
       </Box>
+      <!-- A named slot, not a direct <LanguageSwitcher/> + boolean prop --
+           the first version of this did that and broke every OTHER
+           HeaderMenu consumer's build (brff has no vue-i18n installed at
+           all): a static top-level import here is unconditional at build
+           time regardless of what a runtime v-if later decides, so it
+           pulled useLocale.js -> vue-i18n into every consumer's module
+           graph whether or not they ever pass the prop. A slot has zero
+           import here at all -- only a consumer that actually fills it
+           (jpm/website's App.vue: <template #language-switcher>
+           <LanguageSwitcher/></template>) takes on that dependency. -->
+      <Box v-if="$slots['language-switcher']" class="p-0">
+        <slot name="language-switcher"/>
+      </Box>
       <Box v-if="menuToggle">
         <MenuToggle/>
       </Box>

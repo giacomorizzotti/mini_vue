@@ -18,9 +18,10 @@ const props = defineProps({
   // routed page rather than a directly-embedded component like GDPR.vue --
   // a route's static `props` config can't bind a reactive value), it
   // auto-detects from <html lang="...">, the same convention GDPR.vue
-  // itself uses -- and the exact thing jpm's useLocale.js:setLocale()
-  // already keeps in sync on every language switch specifically so mini
-  // components like this one stay correct. The shared API only has
+  // itself uses -- and the exact thing this file's own sibling
+  // composables/useLocale.js:setLocale() already keeps in sync on every
+  // language switch specifically so mini components like this one stay
+  // correct. The shared API only has
   // it/en content, so anything other than Italian resolves to English
   // rather than the API's own bare 'not literally en -> it' default --
   // a French/German visitor should see English, not a language they may
