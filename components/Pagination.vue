@@ -28,7 +28,7 @@ const emit = defineEmits(['update:currentPage'])
 </script>
 
 <template>
-  <div class="pagination flex flex-wrap align-items-center" v-if="totalPages > 1">
+  <div class="pagination flex flex-wrap align-items-center g-05" v-if="totalPages > 1">
     <Button
       :size="size"
       class="m-0"
