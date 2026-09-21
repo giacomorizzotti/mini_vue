@@ -72,28 +72,64 @@ export function columnsForBoxSize(boxSize, fallback = 3) {
  *   percentage (boxWidth.js's rawBoxStyle(), see usesRawStyle()/rawStyle()
  *   below) instead of a box-* class, since the box-* class it'd otherwise get
  *   is exactly the one whose *duplicate* width this bypass exists to get past.
+ * @param {boolean|import('vue').MaybeRefOrGetter<boolean>} [opts.strictMinColumnPx] -
+ *   opt-in, default false (every existing minColumnPx caller is unaffected --
+ *   this only changes anything once both this AND minColumnPx are set).
+ *   Plain minColumnPx (above) only ever *widens* the offered candidates past
+ *   mini's own tiers; it never narrows one back out, even a tier-distinct
+ *   candidate whose real rendered width is far too cramped for the caller's
+ *   actual row content (e.g. a container barely wider than mini's own "zero"
+ *   breakpoint, where "4 per row" can resolve to a genuinely-distinct ~50%
+ *   column -- a real, selectable width, just one a full, non-minified card
+ *   can't fit in). strictMinColumnPx flips minColumnPx from a floor that
+ *   only *adds* options to one that *gates* every multi-column candidate:
+ *   only a candidate that would give each card at least minColumnPx survives
+ *   (tier-distinct or not), except column 1, which always stays available as
+ *   the one guaranteed-safe fallback layout. This also feeds boxSize's own
+ *   clamp and usesRawStyle()'s own current-value check (not just cycling),
+ *   so an already-selected, now-too-narrow value (e.g. persisted from a
+ *   wider window) self-corrects back down to column 1 on its own, the same
+ *   way any other out-of-range persisted value already does -- it doesn't
+ *   just stop being *offered* going forward.
  */
 export function useGridColumns(elRef, storageKey, defaultColumns, columnOptions = [1, 2, 3, 4, 5, 6], opts = {}) {
-  const { minColumnPx = null } = opts
+  const { minColumnPx = null, strictMinColumnPx = false } = opts
   const width = useElementWidth(elRef)
   const columns = usePersistedRef(storageKey, defaultColumns)
-  // Clamped to whatever the *current* columnOptions actually allow -- a
-  // persisted value from before columnOptions narrowed (e.g. minified
-  // toggled back off, dropping 6 back out of range) must not keep
-  // rendering at a width nothing currently offers cycling back to.
-  const boxSize = computed(() => {
+
+  // The candidate set every computation below is built from -- ordinarily
+  // just the caller's own columnOptions, unchanged (matches every caller's
+  // behavior from before strictMinColumnPx existed). With strictMinColumnPx
+  // opted in, a multi-column candidate that wouldn't give each card at
+  // least minColumnPx worth of width is dropped here, upfront -- before it
+  // ever reaches tiering, clamping, or raw-style resolution below -- rather
+  // than merely being skipped by cycling (see strictMinColumnPx's own docs
+  // above for why that distinction matters).
+  function validColumnOptions() {
     const options = toValue(columnOptions)
+    const minPx = toValue(minColumnPx)
+    if (!toValue(strictMinColumnPx) || minPx == null) return options
+    return options.filter(c => c === 1 || width.value / c >= minPx)
+  }
+
+  // Clamped to whatever the *current* valid options actually allow -- a
+  // persisted value from before columnOptions narrowed (e.g. minified
+  // toggled back off, dropping 6 back out of range, or strictMinColumnPx
+  // dropping a too-narrow candidate) must not keep rendering at a width
+  // nothing currently offers cycling back to.
+  const boxSize = computed(() => {
+    const options = validColumnOptions()
     const clamped = options.includes(columns.value) ? columns.value : Math.max(...options)
     return COLUMN_TO_BOX_SIZE[clamped]
   })
 
-  // The subset of columnOptions that mini's own tiered box-* classes
-  // currently render as genuinely different widths, in order -- e.g. at a
-  // container width where "4 per row" and "5 per row" both collapse onto
-  // the same actual 2-column layout as "2 per row" already does, this
-  // keeps only the first of the three.
+  // The subset of the current valid options that mini's own tiered box-*
+  // classes currently render as genuinely different widths, in order --
+  // e.g. at a container width where "4 per row" and "5 per row" both
+  // collapse onto the same actual 2-column layout as "2 per row" already
+  // does, this keeps only the first of the three.
   function tierDistinctColumnOptions() {
-    const options = toValue(columnOptions)
+    const options = validColumnOptions()
     const boxSizes = options.map(c => COLUMN_TO_BOX_SIZE[c])
     return distinctBoxSizes(boxSizes, width.value).map(label => BOX_SIZE_TO_COLUMN[label])
   }
@@ -111,16 +147,21 @@ export function useGridColumns(elRef, storageKey, defaultColumns, columnOptions 
   // as the cycle going backwards or repeating (e.g. 1 -> 2 -> 3 -> 2 -> 3
   // -> ... at a width where nominal 4/6 collapse onto 2/3's own widths).
   //
-  // With minColumnPx set, this is tierDistinctColumnOptions() *widened* --
-  // a candidate mini's own tiers can't yet tell apart still qualifies once
-  // it would literally fit (see minColumnPx's own docs above). Every such
-  // candidate is, by construction, its own distinct width (100/c is unique
-  // per c), so no further dedup is needed for that part of the list.
+  // With minColumnPx set (and strictMinColumnPx left at its default), this
+  // is tierDistinctColumnOptions() *widened* -- a candidate mini's own
+  // tiers can't yet tell apart still qualifies once it would literally fit
+  // (see minColumnPx's own docs above). Every such candidate is, by
+  // construction, its own distinct width (100/c is unique per c), so no
+  // further dedup is needed for that part of the list. With
+  // strictMinColumnPx also set, validColumnOptions() has already dropped
+  // every candidate that doesn't pass the floor, so every one of them
+  // independently satisfies `width/c >= minPx` here too -- this reduces to
+  // just returning the (already-filtered) options, tier-distinct or not.
   function distinctColumnOptions() {
     const tiered = tierDistinctColumnOptions()
     const minPx = toValue(minColumnPx)
     if (minPx == null) return tiered
-    const options = toValue(columnOptions)
+    const options = validColumnOptions()
     const tieredSet = new Set(tiered)
     return options.filter(c => tieredSet.has(c) || width.value / c >= minPx)
   }
@@ -133,8 +174,17 @@ export function useGridColumns(elRef, storageKey, defaultColumns, columnOptions 
   // minColumnPx-only candidates above -- i.e. mini's own box-* class for it
   // would actually render at a duplicate (wrong) width right now, so the
   // template must render it via rawStyle() instead of :size="boxSize".
+  // Guarded by validColumnOptions() first: a columns.value that
+  // strictMinColumnPx has since disqualified entirely (e.g. persisted from
+  // a wider window) must fall through to boxSize's own already-clamped
+  // value instead of still bypassing it via a raw, no-longer-valid
+  // percentage -- a no-op check for every non-strict caller, since
+  // validColumnOptions() there is just the raw columnOptions, which
+  // trivially contains anything already in columnOptions.
   function usesRawStyle() {
     if (toValue(minColumnPx) == null) return false
+    const valid = validColumnOptions()
+    if (!valid.includes(columns.value)) return false
     return !tierDistinctColumnOptions().includes(columns.value)
   }
 
