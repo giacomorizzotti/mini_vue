@@ -30,6 +30,13 @@ const props = defineProps({
     type: Function,
     default: (query) => `Create "${query}"`,
   },
+  // Skips the removable chips below the input, for a caller that already
+  // shows the selection somewhere else (selected options are still left out
+  // of the dropdown either way).
+  hideSelected: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(['update:modelValue', 'create'])
@@ -140,7 +147,7 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
         {{ createLabel(trimmedQuery) }}
       </li>
     </ul>
-    <p v-if="selectedOptions.length" class="my-1 flex g-05 align-items-start flex-wrap">
+    <p v-if="!hideSelected && selectedOptions.length" class="my-1 flex g-05 align-items-start flex-wrap">
       <span v-for="option in selectedOptions" :key="option.id" class="link-box p-075 b-rad-5">
         {{ option.label }}
         <Xmark width="14" height="14" style="vertical-align: text-bottom; cursor: pointer;" class="ms-05" @click="removeOption(option.id)"/>
