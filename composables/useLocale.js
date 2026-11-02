@@ -31,6 +31,21 @@ export function useLocale() {
   return { locale, setLocale, availableLocales: AVAILABLE_LOCALES }
 }
 
+/** The current page in another language, for a site whose routes hold the
+ * language in a param (/en/7 <-> /it/7), keeping query and hash. Meant for
+ * LanguageSwitcher's `linkFor`:
+ * `(lang) => localeRoute($route, lang, { fallback: 'home' })`. A route without
+ * that param (a catch-all not-found page, say) goes to the `fallback` named
+ * route in that language, or returns null without one, which makes
+ * LanguageSwitcher switch in place. Takes the route as an argument so this
+ * module stays free of any vue-router import (see LanguageSwitcher.vue). */
+export function localeRoute(route, lang, { param = 'lang', fallback = null } = {}) {
+  if (route.params[param]) {
+    return { name: route.name, params: { ...route.params, [param]: lang }, query: route.query, hash: route.hash }
+  }
+  return fallback ? { name: fallback, params: { [param]: lang }, query: route.query } : null
+}
+
 /** Bootstrap-time locale detection -- for main.js, before createI18n (and
  * so useI18n()) exists yet: saved preference, else the browser's own
  * language if supported, else 'en'. Same @/config/locale contract as
