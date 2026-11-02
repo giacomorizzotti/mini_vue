@@ -15,6 +15,10 @@
       type: [Number, String],
       default: null
     },
+    margin: {
+      type: [Number, String],
+      default: null
+    },
     gap: {
       type: [Number, String],
       default: null
@@ -52,10 +56,14 @@
       default:false
     },
   })
-  // Size mapping
-  const marginAndPaddingClassMap = {
+  // Mirror mini's _margins_paddings.scss $paddingThickness/$marginThickness labels
+  const paddingClassMap = {
     0:'0', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5',
-    '05': '05', 15: '15'
+    '025': '025', '05': '05', '075': '075', 15: '15', 25: '25'
+  }
+  const marginClassMap = {
+    ...paddingClassMap,
+    '-1': '-1', '-075': '-075', '-05': '-05', '-025': '-025', auto: 'auto'
   }
   // Gap mapping
   const gapClassMap = {
@@ -81,8 +89,8 @@
     }
 
     // Margins and paddings
-    const paddingClass = props.padding && marginAndPaddingClassMap[props.padding] ? 'p-'+marginAndPaddingClassMap[props.padding] : null
-    const marginClass = props.margin && marginAndPaddingClassMap[props.margin] ? 'm-'+marginAndPaddingClassMap[props.margin] : null
+    const paddingClass = paddingClassMap[props.padding] ? 'p-'+paddingClassMap[props.padding] : null
+    const marginClass = marginClassMap[props.margin] ? 'm-'+marginClassMap[props.margin] : null
     classes.push(paddingClass)
     classes.push(marginClass)
 

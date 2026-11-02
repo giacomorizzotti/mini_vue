@@ -11,7 +11,7 @@ import { OWNER } from '@/config/owner'
 // project that actually processes data for a purpose beyond login/analytics
 // (e.g. jpm's Paddle billing) needs to pass a wider list; see the shared
 // api.uwa.agency/privacy-policy/ service's own $PURPOSE_CATALOG for which
-// keys exist.
+// keys exist. 'analytics' resolves there to the Umami entry (analytics_umami).
 const props = defineProps({
   purposes: { type: String, default: 'login,analytics' },
   // Optional explicit override. Omitted (the common case, since this is a

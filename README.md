@@ -1,41 +1,51 @@
-# Mini.js Vue Components & Composables
+# mini_vue
 
-This directory contains Vue 3 components and composables converted from the original mini.js utility library.
+Vue 3 components and composables for the mini framework, converted from the original mini.js utility library. Projects use it through a symlink at `src/mini`; it isn't an npm package.
+
+`CLAUDE.md` in this directory has the full reference for every component and composable.
 
 ## Directory Structure
 
 ```
 mini/
-├── composables/       # Reusable composition functions (all in index.js)
-│   ├── useMobileDetection.js
-│   ├── useCookies.js
-│   ├── useScrollDetection.js
-│   ├── useScrollState.js
-│   ├── useClassManipulation.js
-│   ├── useImageCover.js
-│   ├── useWebsiteSettings.js
-│   ├── useMenuState.js
-│   ├── useMessage.js
-│   └── index.js
-├── components/        # Vue components
-│   ├── Layout: Aside, Box, Boxes, Container, Footer, Header, Main, Section, etc.
-│   ├── Navigation: Menu, MenuToggle, DropdownMenu, PageMenu, etc.
-│   ├── UI: Button, Loader, Modal, StarsBackground, VibingText, etc.
-│   ├── Pagination: Pagination, PaginatedList
-│   ├── Forms: ConfirmDialog, LoginForm, GDPR
-│   └── index.js (exports all 38+ components)
+├── components/    41 .vue components, exported from components/index.js (all except Actions)
+├── composables/   composition functions, exported from composables/index.js
+├── directives/    imageCover.js
+├── pages/         CookiePolicy.vue, PrivacyPolicy.vue
+├── stores/        auth.js, config.js (Pinia)
+├── views/         LoginView.vue
 └── README.md
 ```
 
-## Composables (9 Total)
+## Importing
 
-All composables are exported from a single `index.js` file using ES6 re-exports.
+Import each file directly. This works in every project:
+
+```javascript
+import Box from '@/mini/components/Box.vue'
+import { useCookies } from '@/mini/composables/useCookies'
+```
+
+The barrels (`@/mini/components`, `@/mini/composables`) are shorter, but they include `useLocale` and `LanguageSwitcher`, so the build fails unless the project has `vue-i18n` installed and provides `@/config/locale`.
+
+Some files expect the project to provide a config module:
+
+| Used by | The project must provide |
+|---|---|
+| `stores/auth.js` | `@/config/auth` |
+| `views/LoginView.vue` | `@/config/auth`, including `OAUTH_AUTHORIZE_ENDPOINT` |
+| `pages/PrivacyPolicy.vue`, `pages/CookiePolicy.vue` | `@/config/owner` |
+| `useLocale`, `LanguageSwitcher` | `@/config/locale` and `vue-i18n` |
+
+## Common Composables
+
+These are the ones ported from mini.js. `CLAUDE.md` lists the rest, including the calendar, Markdown and drag-and-drop composables.
 
 ### useMobileDetection
 Detects mobile devices and provides reactive state.
 
 ```javascript
-import { useMobileDetection } from '@/mini/composables'
+import { useMobileDetection } from '@/mini/composables/useMobileDetection'
 
 const { isMobile, isDesktop, mobileCheck } = useMobileDetection()
 ```
@@ -44,7 +54,7 @@ const { isMobile, isDesktop, mobileCheck } = useMobileDetection()
 Manage browser cookies easily.
 
 ```javascript
-import { useCookies } from '@/mini/composables'
+import { useCookies } from '@/mini/composables/useCookies'
 
 const { setCookie, readCookie, deleteCookie } = useCookies()
 setCookie('username', 'john', 30)
@@ -54,7 +64,7 @@ setCookie('username', 'john', 30)
 Track scroll position and direction.
 
 ```javascript
-import { useScrollDetection } from '@/mini/composables'
+import { useScrollDetection } from '@/mini/composables/useScrollDetection'
 
 const { isScrolled, isTop, scrollY, scrollDirection } = useScrollDetection(80)
 ```
@@ -63,7 +73,7 @@ const { isScrolled, isTop, scrollY, scrollDirection } = useScrollDetection(80)
 Provides reactive scroll state classes for styling.
 
 ```javascript
-import { useScrollState } from '@/mini/composables'
+import { useScrollState } from '@/mini/composables/useScrollState'
 
 const { scrollClass } = useScrollState()
 ```
@@ -72,7 +82,7 @@ const { scrollClass } = useScrollState()
 DOM class manipulation utilities.
 
 ```javascript
-import { useClassManipulation } from '@/mini/composables'
+import { useClassManipulation } from '@/mini/composables/useClassManipulation'
 
 const { addClass, removeClass, toggleClass, collapse, showElement, hideElement } = useClassManipulation()
 ```
@@ -81,7 +91,7 @@ const { addClass, removeClass, toggleClass, collapse, showElement, hideElement }
 Make images cover their container maintaining aspect ratio.
 
 ```javascript
-import { useImageCover } from '@/mini/composables'
+import { useImageCover } from '@/mini/composables/useImageCover'
 
 const { applyCover, applyFullHdRatio } = useImageCover()
 ```
@@ -90,7 +100,7 @@ const { applyCover, applyFullHdRatio } = useImageCover()
 Manage application settings via cookies.
 
 ```javascript
-import { useWebsiteSettings } from '@/mini/composables'
+import { useWebsiteSettings } from '@/mini/composables/useWebsiteSettings'
 
 const { settings, setSetting, getSetting } = useWebsiteSettings()
 ```
@@ -99,21 +109,41 @@ const { settings, setSetting, getSetting } = useWebsiteSettings()
 Provides reactive menu state management.
 
 ```javascript
-import { useMenuState } from '@/mini/composables'
+import { useMenuState } from '@/mini/composables/useMenuState'
 
-const { menuStateClass } = useMenuState()
+const { isMenuOpen, menuStateClass, menuOpen, menuClose, menuToggle } = useMenuState()
 ```
 
 ### useMessage
-Message/notification state management.
+Message/notification state management, shown by the `MessageBox` component.
 
 ```javascript
-import { useMessage } from '@/mini/composables'
+import { useMessage } from '@/mini/composables/useMessage'
 
-// Check implementation for specific usage
+const { showSuccessMessage, showDangerMessage } = useMessage()
+showSuccessMessage('Saved')
 ```
 
 ## Key Components
+
+### Box and Boxes
+The layout grid. `size` sets a box's width, and `padding` and `margin` become mini's `p-*` and `m-*` classes.
+
+```vue
+<Boxes gap="2" padding="1">
+  <Box :size="50" padding="2" margin="auto">...</Box>
+  <Box :size="50" :padding="0">...</Box>
+</Boxes>
+```
+
+Both props accept `0`, `025`, `05`, `075`, `1`, `15`, `2`, `25`, `3`, `4` and `5`. `margin` also accepts `-1`, `-075`, `-05`, `-025` and `auto`. Write labels with a leading zero as strings, like `padding="05"`.
+
+### Button
+`size` accepts `XS`, `S`, `L`, `XL` and `XXL`. It also accepts lowercase and long forms such as `xs` or `small`, but always outputs the uppercase class, because mini's size classes are uppercase only.
+
+```vue
+<Button color="info" size="L" text="Large button"/>
+```
 
 ### Pagination
 Simple Previous/Next pagination using your Button component.
@@ -146,7 +176,7 @@ Full-page loader with optional logo.
 ```
 
 ### StarsBackground
-Animated starry background (no inline styles, uses mini.css).
+Animated starry background, styled by mini.css.
 
 ```vue
 <StarsBackground>
@@ -210,47 +240,11 @@ Dropdown menu with hover/click support and mobile detection.
 </DropdownMenu>
 ```
 
-## Installation in Your Project
-
-### Import composables:
-```javascript
-// All composables in one import
-import { 
-  useMobileDetection, 
-  useCookies, 
-  useScrollDetection,
-  useMenuState 
-} from '@/mini/composables'
-```
-
-### Import components:
-```vue
-import { 
-  Pagination, 
-  PaginatedList, 
-  Loader, 
-  Modal,
-  ConfirmDialog 
-} from '@/mini/components'
-```
-
-### Global registration (optional):
-```javascript
-// main.js
-import * as MiniComponents from '@/mini/components'
-
-Object.entries(MiniComponents).forEach(([name, component]) => {
-  app.component(name, component)
-})
-```
-
 ## Design Philosophy
 
-- **No inline styles**: All components rely on your mini.css for styling
-- **Empty `<style scoped>` blocks**: Components use class-based styling
-- **Composable-first**: Logic extracted into reusable composables
-- **Component composition**: Components use other mini components (Box, Button, Modal, etc.)
-- **Barrel exports**: Single import point for all composables and components
+- **Classes first**: components rely on mini.css. A few still need inline styles or scoped rules, such as `Modal` and `SubNavigation`
+- **Composable-first**: logic is extracted into reusable composables
+- **Component composition**: components use other mini components (Box, Button, Modal, etc.)
 
 ## Migration from mini.js
 
@@ -268,9 +262,6 @@ Object.entries(MiniComponents).forEach(([name, component]) => {
 
 ## Notes
 
-- All composables are reactive and use Vue 3 Composition API
-- Components use `<script setup>` syntax
-- Event listeners are automatically cleaned up on unmount
-- All styling through mini.css - no scoped styles used
-- Composables consolidated in single index.js using re-exports
-- Components remain in separate .vue files (required for SFC template syntax)
+- Components use `<script setup>` syntax and the Composition API
+- Event listeners are cleaned up on unmount
+- Components stay in separate .vue files, as SFC templates require
