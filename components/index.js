@@ -28,7 +28,7 @@ export { default as Space } from './Space.vue'
 export { default as Menu } from './Menu.vue'
 export { default as MenuToggle } from './MenuToggle.vue'
 export { default as DropdownMenu } from './DropdownMenu.vue'
-export { default as LanguageSwitcher } from './LanguageSwitcher.vue'
+// LanguageSwitcher: import from '@/mini/locale', because it needs vue-i18n.
 export { default as PageMenu } from './PageMenu.vue'
 export { default as SubNavigation } from './SubNavigation.vue'
 export { default as Top } from './Top.vue'
@@ -58,3 +58,4 @@ export { default as GDPR } from './GDPR.vue'
 
 // Utility Components
 export { default as Credits } from './Credits.vue'
+export { default as Actions } from './Actions.vue'

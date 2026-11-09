@@ -8,12 +8,13 @@ Vue 3 components and composables for the mini framework, converted from the orig
 
 ```
 mini/
-├── components/    41 .vue components, exported from components/index.js (all except Actions)
+├── components/    41 .vue components, exported from components/index.js (all except LanguageSwitcher)
 ├── composables/   composition functions, exported from composables/index.js
 ├── directives/    imageCover.js
 ├── pages/         CookiePolicy.vue, PrivacyPolicy.vue
 ├── stores/        auth.js, config.js (Pinia)
 ├── views/         LoginView.vue
+├── locale.js      @/mini/locale: useLocale, detectInitialLocale, localeRoute, LanguageSwitcher
 └── README.md
 ```
 
@@ -26,7 +27,11 @@ import Box from '@/mini/components/Box.vue'
 import { useCookies } from '@/mini/composables/useCookies'
 ```
 
-The barrels (`@/mini/components`, `@/mini/composables`) are shorter, but they include `useLocale` and `LanguageSwitcher`, so the build fails unless the project has `vue-i18n` installed and provides `@/config/locale`.
+The barrels (`@/mini/components`, `@/mini/composables`) are shorter. The locale code has its own entry point, because it needs `vue-i18n` and `@/config/locale`:
+
+```js
+import { useLocale, detectInitialLocale, localeRoute, LanguageSwitcher } from '@/mini/locale'
+```
 
 Some files expect the project to provide a config module:
 

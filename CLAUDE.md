@@ -20,17 +20,18 @@ This repo is symlinked into projects that may live on machines/servers you canno
 ## Structure
 
 ```
-components/     41 .vue components, barrel-exported from components/index.js (all except Actions)
+components/     41 .vue components, barrel-exported from components/index.js (all except LanguageSwitcher)
 composables/    composition functions, barrel-exported from composables/index.js
 directives/     imageCover.js
 stores/         two Pinia stores: auth.js, config.js
 views/          LoginView.vue
 pages/          CookiePolicy.vue, PrivacyPolicy.vue
+locale.js       @/mini/locale: useLocale, detectInitialLocale, localeRoute, LanguageSwitcher
 ```
 
 Every new component/composable must be added to its directory's `index.js` barrel export, or consuming projects importing from `@/mini/components`/`@/mini/composables` won't see it.
 
-Importing either barrel pulls in `useLocale.js`, which statically imports `vue-i18n` and `@/config/locale`, so the build fails in a project without them. Such a project must import each file directly (`@/mini/components/Box.vue`). The fix is tracked in the mini repo's `PLAN.md`.
+The exception is the locale code. `useLocale`, `detectInitialLocale`, `localeRoute` and `LanguageSwitcher` are exported from `locale.js` (`@/mini/locale`) instead, because `useLocale.js` statically imports `vue-i18n` and `@/config/locale`: inside a barrel they broke the build of every project without them. Keep anything else that needs an optional package or a project config file out of the barrels too, and check by building a project without `vue-i18n` that imports both barrels. Removed from the barrels on 2026-11-09, when no project on this machine imported them from there.
 
 ### Components (by rough category)
 

@@ -30,6 +30,7 @@ export { useUmami } from './useUmami'
 export { useTimeGrid, useDragToCreate, useDragToMove, useDragToResize, layoutOverlapping } from './useTimeGrid'
 export { lockBodyScroll, unlockBodyScroll } from './useBodyScrollLock'
 export { useLinkify, linkify } from './useLinkify'
-export { useLocale, detectInitialLocale, localeRoute } from './useLocale'
+// useLocale, detectInitialLocale and localeRoute: import from '@/mini/locale',
+// because useLocale.js needs vue-i18n and @/config/locale.
 export { useMarkdown, renderMarkdown, markdownToPlainText } from './useMarkdown'
 export { useSortableList } from './useSortableList'
