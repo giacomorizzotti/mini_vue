@@ -34,3 +34,5 @@ export { useLinkify, linkify } from './useLinkify'
 // because useLocale.js needs vue-i18n and @/config/locale.
 export { useMarkdown, renderMarkdown, markdownToPlainText } from './useMarkdown'
 export { useSortableList } from './useSortableList'
+export { useOverlayA11y, closeLabel } from './useOverlayA11y'
+export { useCombobox, removeLabel } from './useCombobox'

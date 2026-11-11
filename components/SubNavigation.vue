@@ -11,6 +11,7 @@ import Boxes from '@/mini/components/Boxes.vue';
 import Box from '@/mini/components/Box.vue';
 import { XmarkCircle } from '@iconoir/vue'
 import { lockBodyScroll, unlockBodyScroll } from '@/mini/composables/useBodyScrollLock'
+import { useOverlayA11y, closeLabel } from '@/mini/composables/useOverlayA11y'
 
 const props = defineProps({
   visible: Boolean,
@@ -18,6 +19,9 @@ const props = defineProps({
   // outer panel stays visible behind an inner one. Only layer 1 draws the
   // dark backdrop — nested layers sit on top of the same one.
   layer: { type: Number, default: 1 },
+  // Name of the close button for screen readers; defaults to "Close" in the
+  // page's language.
+  closeLabel: { type: String, default: '' },
 })
 const emit = defineEmits(['close', 'loaded'])
 
@@ -26,9 +30,10 @@ let lockedAncestor = null
 
 const closeModal = () => emit('close')
 
-const handleKeydown = (e) => {
-  if (e.key === 'Escape') closeModal()
-}
+// Esc, Tab and focus handling: see useOverlayA11y. With nested layers, Esc
+// closes only the topmost one.
+const panelRef = ref(null)
+const { onGuardFocus } = useOverlayA11y(() => props.visible, () => panelRef.value?.$el ?? null, closeModal)
 
 // While this panel is open, the panel it's nested inside (its nearest
 // ancestor's own scrollable card) should sit scrolled to the top and not
@@ -62,7 +67,6 @@ watch(() => props.visible, (newVisible) => {
 })
 
 onMounted(() => {
-  window.addEventListener('keydown', handleKeydown)
   if (props.visible) {
     if (props.layer === 1) lockBodyScroll()
     lockAncestorScroll()
@@ -71,7 +75,6 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeydown)
   if (props.layer === 1 && props.visible) unlockBodyScroll()
   unlockAncestorScroll()
 })
@@ -124,13 +127,17 @@ onUnmounted(() => {
         <Container ref="rootEl" v-show="visible" fw class="subnav-box full-page-container" :class="`subnav-layer-${layer}`">
             <div v-if="layer === 1" class="subnav-black-layer" @click="handleBackdropClick()"></div>
             <Boxes class="subnav-click-layer justify-content-start align-items-start z-3" fh>
-                <Box background="white" class="pe-5 box-shadow subnav-content-wrapper contain">
+                <Box ref="panelRef" background="white" class="pe-5 box-shadow subnav-content-wrapper contain"
+                    role="dialog" aria-modal="true" tabindex="-1">
+                    <span data-focus-guard tabindex="0" class="focus-guard" @focus="onGuardFocus('start')"></span>
                     <p class="m-0 right" style="position: absolute; right: calc( var(--margin) * 1.5 ); top: calc( var(--margin) * 1.5 );">
-                        <a class="pointer black-text">
-                            <XmarkCircle width="32px" height="32px" class="m-0" @click="emit('close');" style="background-color: var(--white); border-radius: 50%; box-shadow: 0 0 5px 5px var(--white)"/>
+                        <a class="pointer black-text" role="button" tabindex="0" :aria-label="props.closeLabel || closeLabel()"
+                            @click="emit('close')" @keydown.enter.prevent="emit('close')" @keydown.space.prevent="emit('close')">
+                            <XmarkCircle width="32px" height="32px" class="m-0" aria-hidden="true" style="background-color: var(--white); border-radius: 50%; box-shadow: 0 0 5px 5px var(--white)"/>
                         </a>
                     </p>
                     <slot/>
+                    <span data-focus-guard tabindex="0" class="focus-guard" @focus="onGuardFocus('end')"></span>
                 </Box>
             </Boxes>
         </Container>
@@ -178,6 +185,12 @@ onUnmounted(() => {
   @media screen and (min-width: 768px) {
     width: 85vw;
   }
+}
+
+// Focus lands on the panel itself when it opens (useOverlayA11y), so screen
+// readers announce it; it isn't a control, so no focus ring.
+.subnav-content-wrapper:focus {
+  outline: none;
 }
 
 .subnav-layer-2 .subnav-content-wrapper {
@@ -230,5 +243,19 @@ onUnmounted(() => {
 .subnav-slide-enter-from .subnav-black-layer,
 .subnav-slide-leave-to .subnav-black-layer {
   opacity: 0;
+}
+
+/* Invisible Tab stops at the panel's edges that send focus back around
+   (useOverlayA11y's focus guards). Not 0x0: Chrome's Tab skips those.
+   Fixed, so focusing one never scrolls the panel. */
+.focus-guard {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  outline: none;
 }
 </style>

@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, useAttrs } from 'vue'
 import { Xmark } from '@iconoir/vue'
+import { useCombobox } from '@/mini/composables/useCombobox'
 
 // Same pattern as MarkdownEditor.vue's own inner <textarea>: fallthrough
 // attrs (class, id, disabled, ...) forward onto the actual <input> rather
@@ -46,6 +47,13 @@ const filteredOptions = computed(() => {
   return props.options.filter(option => option.label.toLowerCase().includes(search))
 })
 
+const listShown = computed(() => isOpen.value && filteredOptions.value.length > 0)
+const { listboxId, optionId, activeIndex, move } = useCombobox(filteredOptions, listShown)
+// The list's own name: the input's aria-label if the caller gave one, else
+// its placeholder.
+const attrs = useAttrs()
+const listLabel = computed(() => attrs['aria-label'] || props.placeholder)
+
 function selectOption(option) {
   emit('update:modelValue', option.id)
   query.value = option.label
@@ -67,11 +75,21 @@ function handleInput() {
 }
 
 function handleKeydown(event) {
-  if (event.key === 'Escape') {
-    isOpen.value = false
-  } else if (event.key === 'Enter' && isOpen.value && filteredOptions.value.length) {
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    // preventDefault keeps the caret where it is.
     event.preventDefault()
-    selectOption(filteredOptions.value[0])
+    isOpen.value = true
+    move(event.key === 'ArrowDown' ? 1 : -1)
+  } else if (event.key === 'Escape') {
+    // With the list open, Esc only closes the list: a Modal around this
+    // field skips an Esc that's already handled (defaultPrevented).
+    if (listShown.value) event.preventDefault()
+    isOpen.value = false
+  } else if (event.key === 'Enter' && listShown.value) {
+    // The highlighted option, or the first match when nothing is
+    // highlighted (type, then Enter).
+    event.preventDefault()
+    selectOption(filteredOptions.value[Math.max(activeIndex.value, 0)])
   }
 }
 
@@ -132,6 +150,11 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
       :class="{ 'has-clear': query }"
       :placeholder="placeholder"
       autocomplete="off"
+      role="combobox"
+      aria-autocomplete="list"
+      :aria-expanded="listShown ? 'true' : 'false'"
+      :aria-controls="listShown ? listboxId : undefined"
+      :aria-activedescendant="listShown && activeIndex >= 0 ? optionId(activeIndex) : undefined"
       @input="handleInput"
       @focus="isOpen = true"
       @click="isOpen = true"
@@ -147,8 +170,20 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
       @mousedown.prevent
       @click="clearSelection"
     />
-    <ul v-if="isOpen && filteredOptions.length" class="autocomplete-options">
-      <li v-for="option in filteredOptions" :key="option.id" @mousedown.prevent @click="selectOption(option)">
+    <!-- tabindex="-1": the list scrolls, and Chrome makes scrollable boxes
+         Tab stops on their own. Tab would land here, the input's blur would
+         close the list, and focus would drop to the page. -->
+    <ul v-if="listShown" :id="listboxId" class="autocomplete-options" tabindex="-1" role="listbox" :aria-label="listLabel">
+      <li
+        v-for="(option, index) in filteredOptions"
+        :key="option.id"
+        :id="optionId(index)"
+        role="option"
+        :aria-selected="index === activeIndex ? 'true' : 'false'"
+        :class="{ 'is-active': index === activeIndex }"
+        @mousedown.prevent
+        @click="selectOption(option)"
+      >
         {{ option.label }}
       </li>
     </ul>
@@ -198,7 +233,15 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
   cursor: pointer;
 }
 
-.autocomplete-options li:hover {
+.autocomplete-options li:hover,
+.autocomplete-options li.is-active {
   background: var(--light-grey);
+}
+
+// The keyboard highlight. The transparent outline shows up in forced-colors
+// mode, where backgrounds are replaced.
+.autocomplete-options li.is-active {
+  outline: 2px solid transparent;
+  outline-offset: -2px;
 }
 </style>

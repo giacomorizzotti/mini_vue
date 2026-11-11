@@ -2,9 +2,14 @@ import { ref } from 'vue'
 
 const messages = ref([])
 
+// mini's pastel status fills take dark text (white on them is 2.2-3.5:1);
+// any other type keeps white. A caller's own textColor still wins.
+const DARK_TEXT_TYPES = ['info', 'success', 'warning', 'danger', 'bad']
+const defaultTextColor = type => (DARK_TEXT_TYPES.includes(type) ? 'black' : 'white')
+
 export function useMessage() {
 
-  function showMessage(msg, type='info', textColor="white", duration = 3000) {
+  function showMessage(msg, type='info', textColor = defaultTextColor(type), duration = 3000) {
     const id = Date.now() + Math.random()
     messages.value.push({ id, text: msg, type:type, textColor:textColor })
     setTimeout(() => {
@@ -12,7 +17,7 @@ export function useMessage() {
     }, duration)
   }
 
-  function showPersistentMessage(msg, type = 'info', textColor = 'white') {
+  function showPersistentMessage(msg, type = 'info', textColor = defaultTextColor(type)) {
     const id = Date.now() + Math.random()
     messages.value.push({ id, text: msg, type, textColor })
     return id

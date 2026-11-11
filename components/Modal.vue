@@ -1,22 +1,29 @@
 <script setup>
-import { onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import Container from '@/mini/components/Container.vue';
 import Boxes from '@/mini/components/Boxes.vue';
 import Box from '@/mini/components/Box.vue';
 import { XmarkCircle } from '@iconoir/vue'
 import { lockBodyScroll, unlockBodyScroll } from '@/mini/composables/useBodyScrollLock'
+import { useOverlayA11y, closeLabel } from '@/mini/composables/useOverlayA11y'
 
 const props = defineProps({
   visible: Boolean,
   zIndex: { type: Number, default: 1000 },
+  // 'alertdialog' for a confirmation that interrupts the user (ConfirmDialog).
+  role: { type: String, default: 'dialog' },
+  // Name of the close button for screen readers; defaults to "Close" in the
+  // page's language.
+  closeLabel: { type: String, default: '' },
 })
 const emit = defineEmits(['close', 'loaded'])
 
 const closeModal = () => emit('close')
 
-const handleKeydown = (e) => {
-  if (e.key === 'Escape') closeModal()
-}
+// Esc, Tab and focus handling: see useOverlayA11y.
+const panelRef = ref(null)
+const { onGuardFocus } = useOverlayA11y(() => props.visible, () => panelRef.value?.$el ?? null, closeModal)
+
 const handleLayerClick = (e) => {
   if (e.target.classList.contains('modal-click-layer')) closeModal()
 }
@@ -27,13 +34,11 @@ watch(() => props.visible, (newVisible) => {
 })
 
 onMounted(() => {
-  window.addEventListener('keydown', handleKeydown)
   if (props.visible) lockBodyScroll()
   emit('loaded')
 })
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeydown)
   if (props.visible) unlockBodyScroll()
 })
 </script>
@@ -43,13 +48,17 @@ onUnmounted(() => {
         <Container v-if="visible" fw class="modal-box full-page-container" :style="{ zIndex: zIndex }">
             <div class="modal-black-layer"></div>
             <Boxes class="modal-click-layer justify-content-center align-items-center z-top" fh @click="handleLayerClick">
-                <Box padding="2" background="white" class="box-zero-100 box-sm-80 box-md-70 box-lg-66 box-xl-50 b-rad-10 box-shadow modal-content-wrapper">
+                <Box ref="panelRef" padding="2" background="white" class="box-zero-100 box-sm-80 box-md-70 box-lg-66 box-xl-50 b-rad-10 box-shadow modal-content-wrapper"
+                    :role="role" aria-modal="true" tabindex="-1">
+                    <span data-focus-guard tabindex="0" class="focus-guard" @focus="onGuardFocus('start')"></span>
                     <p class="m-0 right" style="position: absolute; right: calc( var(--margin) * 1.5 ); top: calc( var(--margin) * 1.5 ); z-index:9;">
-                        <a class="pointer black-text">
-                            <XmarkCircle width="32px" height="32px" class="m-0" @click="emit('close');" style="background-color: var(--white); border-radius: 50%; box-shadow: 0 0 5px 5px var(--white)"/>
+                        <a class="pointer black-text" role="button" tabindex="0" :aria-label="props.closeLabel || closeLabel()"
+                            @click="emit('close')" @keydown.enter.prevent="emit('close')" @keydown.space.prevent="emit('close')">
+                            <XmarkCircle width="32px" height="32px" class="m-0" aria-hidden="true" style="background-color: var(--white); border-radius: 50%; box-shadow: 0 0 5px 5px var(--white)"/>
                         </a>
                     </p>
                     <slot/>
+                    <span data-focus-guard tabindex="0" class="focus-guard" @focus="onGuardFocus('end')"></span>
                 </Box>
             </Boxes>
         </Container>
@@ -92,8 +101,28 @@ onUnmounted(() => {
   position: relative;
 }
 
+/* Focus lands on the panel itself when it opens (useOverlayA11y), so screen
+   readers announce the dialog; it isn't a control, so no focus ring. */
+.modal-content-wrapper:focus {
+  outline: none;
+}
+
 .z-top {
   z-index: 10;
+}
+
+/* Invisible Tab stops at the panel's edges that send focus back around
+   (useOverlayA11y's focus guards). Not 0x0: Chrome's Tab skips those.
+   Fixed, so focusing one never scrolls the panel. */
+.focus-guard {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  outline: none;
 }
 </style>
 

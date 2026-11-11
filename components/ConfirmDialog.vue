@@ -1,5 +1,5 @@
 <template>
-  <Modal :visible="isVisible" :z-index="1100" @close="cancel">
+  <Modal :visible="isVisible" :z-index="1100" role="alertdialog" @close="cancel">
     <Boxes>
       <Box :size="100" v-if="currentTitle">
         <h3 class="m-0">{{ currentTitle }}</h3>

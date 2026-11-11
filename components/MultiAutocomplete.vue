@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted, useAttrs } from 'vue'
 import { Xmark } from '@iconoir/vue'
+import { useCombobox, removeLabel as defaultRemoveLabel } from '@/mini/composables/useCombobox'
 
 const props = defineProps({
   modelValue: {
@@ -37,6 +38,12 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // Accessible name of each chip's remove button, from the option's label.
+  // Defaults to "Remove <label>" in the page's language.
+  removeLabel: {
+    type: Function,
+    default: defaultRemoveLabel,
+  },
 })
 
 const emit = defineEmits(['update:modelValue', 'create'])
@@ -66,6 +73,15 @@ const showCreateOption = computed(() =>
   && !props.options.some(option => option.label.toLowerCase() === trimmedQuery.value.toLowerCase())
 )
 
+// The list's rows in order: the matches, then the "create" row if offered.
+const CREATE_ROW = Symbol('create')
+const listRows = computed(() => showCreateOption.value ? [...filteredOptions.value, CREATE_ROW] : filteredOptions.value)
+const listShown = computed(() => isOpen.value && listRows.value.length > 0)
+const { listboxId, optionId, activeIndex, move } = useCombobox(listRows, listShown)
+// The list's own name: the aria-label the caller gave, else the placeholder.
+const attrs = useAttrs()
+const listLabel = computed(() => attrs['aria-label'] || props.placeholder)
+
 function selectOption(option) {
   emit('update:modelValue', [...props.modelValue, option.id])
   query.value = ''
@@ -83,6 +99,18 @@ function removeOption(id) {
   emit('update:modelValue', props.modelValue.filter(existingId => existingId !== id))
 }
 
+// From the keyboard, the focused remove button disappears with its chip, so
+// focus moves to the chip that takes its place, the one before it, or the
+// input once no chips are left.
+function removeOptionFromKeyboard(id, index) {
+  removeOption(id)
+  nextTick(() => {
+    const buttons = rootEl.value?.querySelectorAll('.autocomplete-chip-remove') ?? []
+    const next = buttons[Math.min(index, buttons.length - 1)] ?? rootEl.value?.querySelector('input')
+    next?.focus()
+  })
+}
+
 function createOption() {
   emit('create', trimmedQuery.value)
   query.value = ''
@@ -90,8 +118,22 @@ function createOption() {
 }
 
 function handleKeydown(event) {
-  if (event.key === 'Escape') {
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    // preventDefault keeps the caret where it is.
+    event.preventDefault()
+    isOpen.value = true
+    move(event.key === 'ArrowDown' ? 1 : -1)
+  } else if (event.key === 'Escape') {
+    // With the list open, Esc only closes the list: a Modal around this
+    // field skips an Esc that's already handled (defaultPrevented).
+    if (listShown.value) event.preventDefault()
     isOpen.value = false
+  } else if (event.key === 'Enter' && listShown.value && activeIndex.value >= 0) {
+    // The highlighted row. Without one, Enter keeps its old behaviour below.
+    event.preventDefault()
+    const row = listRows.value[activeIndex.value]
+    if (row === CREATE_ROW) createOption()
+    else selectOption(row)
   } else if (event.key === 'Enter' && isOpen.value) {
     if (filteredOptions.value.length) {
       event.preventDefault()
@@ -133,24 +175,58 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
       v-model="query"
       :placeholder="placeholder"
       autocomplete="off"
+      role="combobox"
+      aria-autocomplete="list"
+      :aria-label="attrs['aria-label']"
+      :aria-expanded="listShown ? 'true' : 'false'"
+      :aria-controls="listShown ? listboxId : undefined"
+      :aria-activedescendant="listShown && activeIndex >= 0 ? optionId(activeIndex) : undefined"
       @input="isOpen = true"
       @focus="isOpen = true"
       @click="isOpen = true"
       @blur="isOpen = false"
       @keydown="handleKeydown"
     />
-    <ul v-if="isOpen && (filteredOptions.length || showCreateOption)" class="autocomplete-options">
-      <li v-for="option in filteredOptions" :key="option.id" @mousedown.prevent @click="selectOption(option)">
+    <!-- tabindex="-1": the list scrolls, and Chrome makes scrollable boxes
+         Tab stops on their own. Tab would land here, the input's blur would
+         close the list, and focus would drop to the page. -->
+    <ul v-if="listShown" :id="listboxId" class="autocomplete-options" tabindex="-1" role="listbox" :aria-label="listLabel">
+      <li
+        v-for="(option, index) in filteredOptions"
+        :key="option.id"
+        :id="optionId(index)"
+        role="option"
+        :aria-selected="index === activeIndex ? 'true' : 'false'"
+        :class="{ 'is-active': index === activeIndex }"
+        @mousedown.prevent
+        @click="selectOption(option)"
+      >
         {{ option.label }}
       </li>
-      <li v-if="showCreateOption" @mousedown.prevent @click="createOption">
+      <li
+        v-if="showCreateOption"
+        :id="optionId(filteredOptions.length)"
+        role="option"
+        :aria-selected="activeIndex === filteredOptions.length ? 'true' : 'false'"
+        :class="{ 'is-active': activeIndex === filteredOptions.length }"
+        @mousedown.prevent
+        @click="createOption"
+      >
         {{ createLabel(trimmedQuery) }}
       </li>
     </ul>
     <p v-if="!hideSelected && selectedOptions.length" class="my-1 flex g-05 align-items-start flex-wrap">
-      <span v-for="option in selectedOptions" :key="option.id" class="link-box p-075 b-rad-5">
+      <span v-for="(option, index) in selectedOptions" :key="option.id" class="link-box p-075 b-rad-5">
         {{ option.label }}
-        <Xmark width="14" height="14" style="vertical-align: text-bottom; cursor: pointer;" class="ms-05" @click="removeOption(option.id)"/>
+        <span
+          role="button"
+          tabindex="0"
+          class="autocomplete-chip-remove ms-05"
+          :aria-label="removeLabel(option.label)"
+          @click="removeOption(option.id)"
+          @keydown.enter.prevent="removeOptionFromKeyboard(option.id, index)"
+          @keydown.space.prevent="removeOptionFromKeyboard(option.id, index)"
+        ><Xmark width="14" height="14" aria-hidden="true"/></span>
       </span>
     </p>
   </div>
@@ -183,7 +259,22 @@ onUnmounted(() => window.removeEventListener('click', handleClickOutside))
   cursor: pointer;
 }
 
-.autocomplete-options li:hover {
+.autocomplete-options li:hover,
+.autocomplete-options li.is-active {
   background: var(--main-color-transp);
+}
+
+// The keyboard highlight. The transparent outline shows up in forced-colors
+// mode, where backgrounds are replaced.
+.autocomplete-options li.is-active {
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+}
+
+.autocomplete-chip-remove {
+  display: inline-block;
+  vertical-align: text-bottom;
+  line-height: 0;
+  cursor: pointer;
 }
 </style>

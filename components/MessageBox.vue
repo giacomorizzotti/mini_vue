@@ -8,25 +8,35 @@ import Box from '@/mini/components/Box.vue';
 const { messages, dismissMessage } = useMessage()
 const hasMessages = computed(() => messages.value.length > 0)
 
+// Screen readers only announce changes inside a live region that already
+// existed, so these two are always rendered, outside the v-if below, and
+// repeat the newest message: errors interrupt, everything else waits.
+const latest = computed(() => messages.value[messages.value.length - 1] ?? null)
+const isError = msg => msg?.type === 'danger' || msg?.type === 'error'
+const politeText = computed(() => (latest.value && !isError(latest.value) ? latest.value.text : ''))
+const alertText = computed(() => (isError(latest.value) ? latest.value.text : ''))
+
 function clearAllMessages() {
   messages.value = []
 }
 </script>
 
 <template>
+  <div class="visually-hidden" role="status" aria-live="polite">{{ politeText }}</div>
+  <div class="visually-hidden" role="alert" aria-live="assertive">{{ alertText }}</div>
   <Transition name="message-box-fade">
     <Section v-if="hasMessages" id="message-box" class="message-box">
       <Container fw @click.self="clearAllMessages">
         <Container>
           <div class="message-header">
-            <button v-if="messages.length > 1" class="close-all-btn black-btn square round" @click="clearAllMessages" title="Close all messages">✕</button>
+            <button v-if="messages.length > 1" class="close-all-btn black-btn square round" @click="clearAllMessages" title="Close all messages" aria-label="Close all messages">✕</button>
           </div>
           <Boxes class="center flex-direction-column">
             <TransitionGroup name="message-item" tag="div" style="display:contents;">
               <Box v-for="msg in messages" :key="msg.id" class="message b-rad-10 box-shadow-dark" :background="msg.type">
                 <div class="message-content">
                   <p :class="msg.textColor+'-text'">{{ msg.text }}</p>
-                  <button :class="'close-btn m-0 py-0 ' + msg.type + '-btn'" @click="dismissMessage(msg.id)" title="Close this message">✕</button>
+                  <button :class="'close-btn m-0 py-0 ' + msg.type + '-btn'" @click="dismissMessage(msg.id)" title="Close this message" aria-label="Close this message">✕</button>
                 </div>
               </Box>
             </TransitionGroup>

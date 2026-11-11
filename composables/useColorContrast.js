@@ -39,14 +39,36 @@ function isLightColor(hex, threshold = 182) {
 }
 
 /**
- * Pick a readable text color class for a given background hex color.
+ * WCAG relative luminance of a hex color, 0 (black) - 1 (white).
+ * @param {string} hex
+ * @returns {number}
+ */
+function getLuminance(hex) {
+  const rgb = hexToRgb(hex)
+  if (!rgb) return 1
+  const [r, g, b] = [rgb.r, rgb.g, rgb.b].map(v => {
+    const c = v / 255
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+  })
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+/**
+ * Pick a readable text color class for a given background hex color: dark
+ * text wherever it contrasts more than white does (WCAG contrast ratio).
+ * Mid-tone swatches like '#e6a064' get dark text (about 9.6:1) instead of
+ * the white (2.2:1) the brightness cutoff in isLightColor gives them.
  * @param {string} hex - background color, e.g. '#cccccc'
  * @param {string} lightClass - class to use over light backgrounds
  * @param {string} darkClass - class to use over dark backgrounds
  * @returns {string}
  */
 function getContrastClass(hex, lightClass = 'black-text', darkClass = 'white-text') {
-  return isLightColor(hex) ? lightClass : darkClass
+  if (!hexToRgb(hex)) return isLightColor(hex) ? lightClass : darkClass
+  const luminance = getLuminance(hex)
+  const againstBlack = (luminance + 0.05) / 0.05
+  const againstWhite = 1.05 / (luminance + 0.05)
+  return againstBlack >= againstWhite ? lightClass : darkClass
 }
 
 /**
@@ -54,5 +76,5 @@ function getContrastClass(hex, lightClass = 'black-text', darkClass = 'white-tex
  * @returns {Object} Color contrast utilities
  */
 export function useColorContrast() {
-  return { getBrightness, isLightColor, getContrastClass }
+  return { getBrightness, getLuminance, isLightColor, getContrastClass }
 }
