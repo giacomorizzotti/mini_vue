@@ -43,7 +43,7 @@ const props = defineProps({
 const TRANSLATIONS = {
   it: {
     title:         'Utilizziamo strumenti di analisi',
-    desc:          'Questo sito utilizza strumenti di analisi auto-ospitati e privacy-first per misurare le visite e migliorare l\'esperienza di navigazione. I dati raccolti sono anonimi e aggregati: non vengono impostati cookie di profilazione e nessuno strumento viene attivato senza il tuo consenso esplicito.',
+    desc:          'Questo sito utilizza strumenti di analisi privacy-first per misurare le visite e migliorare l\'esperienza di navigazione. I dati raccolti sono anonimi e aggregati: non vengono impostati cookie di profilazione e nessuno strumento viene attivato senza il tuo consenso esplicito.',
     changeNote:    'Puoi modificare le tue preferenze in qualsiasi momento cliccando sull\'icona 🍪 in basso.',
     privacyLink:   'Privacy policy',
     cookieLink:    'Cookie policy',
@@ -55,7 +55,7 @@ const TRANSLATIONS = {
   },
   en: {
     title:         'We use analytics tools',
-    desc:          'This site uses self-hosted, privacy-first analytics tools to measure visits and improve your browsing experience. Data collected is anonymous and aggregated: no profiling cookies are set, and no analytics tool is activated without your explicit consent.',
+    desc:          'This site uses privacy-first analytics tools to measure visits and improve your browsing experience. Data collected is anonymous and aggregated: no profiling cookies are set, and no analytics tool is activated without your explicit consent.',
     changeNote:    'You can update your preferences at any time by clicking the 🍪 icon below.',
     privacyLink:   'Privacy policy',
     cookieLink:    'Cookie policy',
@@ -67,7 +67,7 @@ const TRANSLATIONS = {
   },
   fr: {
     title:         'Nous utilisons des outils d\'analyse',
-    desc:          'Ce site utilise des outils d\'analyse auto-hébergés et respectueux de la vie privée pour mesurer les visites et améliorer votre expérience de navigation. Les données collectées sont anonymes et agrégées : aucun cookie de profilage n\'est déposé, et aucun outil d\'analyse n\'est activé sans votre consentement explicite.',
+    desc:          'Ce site utilise des outils d\'analyse respectueux de la vie privée pour mesurer les visites et améliorer votre expérience de navigation. Les données collectées sont anonymes et agrégées : aucun cookie de profilage n\'est déposé, et aucun outil d\'analyse n\'est activé sans votre consentement explicite.',
     changeNote:    'Vous pouvez modifier vos préférences à tout moment en cliquant sur l\'icône 🍪 ci-dessous.',
     privacyLink:   'Politique de confidentialité',
     cookieLink:    'Politique de cookies',
@@ -79,7 +79,7 @@ const TRANSLATIONS = {
   },
   de: {
     title:         'Wir verwenden Analyse-Tools',
-    desc:          'Diese Website verwendet selbst gehostete, datenschutzfreundliche Analyse-Tools, um Besuche zu messen und die Nutzererfahrung zu verbessern. Die erfassten Daten sind anonym und aggregiert: Es werden keine Profiling-Cookies gesetzt, und ohne deine ausdrückliche Zustimmung wird kein Analyse-Tool aktiviert.',
+    desc:          'Diese Website verwendet datenschutzfreundliche Analyse-Tools, um Besuche zu messen und die Nutzererfahrung zu verbessern. Die erfassten Daten sind anonym und aggregiert: Es werden keine Profiling-Cookies gesetzt, und ohne deine ausdrückliche Zustimmung wird kein Analyse-Tool aktiviert.',
     changeNote:    'Du kannst deine Einstellungen jederzeit über das 🍪-Symbol unten ändern.',
     privacyLink:   'Datenschutzerklärung',
     cookieLink:    'Cookie-Richtlinie',

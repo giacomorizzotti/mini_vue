@@ -2,7 +2,7 @@
 // keep these two in sync if either changes. There's no way to read Sass
 // variables from JS at runtime, so this is a deliberate, documented
 // duplication rather than something derived automatically.
-const BOX_WIDTH_BREAKPOINTS = [0, 576, 768, 992, 1400] // px: zero, sm, md, lg, xl
+const BOX_WIDTH_BREAKPOINTS = [0, 576, 768, 992, 1200] // px: zero, sm, md, lg, xl
 
 const BOX_WIDTHS = {
   // 8/10/12/15/16/20/25 don't follow the "100% until sm, 50% until md" shape
