@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-`mini_vue` — a shared library of Vue 3 components, composables, directives, and two Pinia stores, consumed by multiple separate frontend projects (jpm, brff, and others) via filesystem symlink, not as a published npm package. Each consuming project symlinks this entire directory in as `<project>/frontend/src/mini` and resolves it through Vite's `@` alias with `preserveSymlinks: true` set in `vite.config.js` — there is no build step or `package.json` in this repo itself; it's raw source that gets compiled as part of whichever project imports it.
+`mini_vue` — a shared library of Vue 3 components, composables, directives, and two Pinia stores, consumed by multiple separate frontend projects (jpm, brff, and others) via filesystem symlink, not as a published npm package. Each consuming project symlinks this entire directory in as `<project>/frontend/src/mini` and resolves it through Vite's `@` alias with `preserveSymlinks: true` set in `vite.config.js` — there is no build step or `package.json` at this repo's root; it's raw source that gets compiled as part of whichever project imports it (`ci/` below only checks that).
 
-There is no test suite, linter, or build command here — verification happens in the consuming project (`npm run build` there will surface any error in this code).
+There is no test suite or linter here — verification happens in the consuming project (`npm run build` there will surface any error in this code). `ci/` is the one build of this repo itself: a tiny Vite app that builds both barrels the way a project wires them (as `src/mini`, through a symlink the GitHub workflow `.github/workflows/build.yml` creates), with no `vue-i18n` installed, so a barrel that reaches an optional package or a project config file fails on push. Never commit the symlink or run `npm` inside `ci/` here: projects link this whole folder in, and `ci/README.md` shows how to run it from a copy.
 
 ## Critical: other consumers may be invisible to you
 
