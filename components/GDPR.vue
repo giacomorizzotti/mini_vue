@@ -67,7 +67,7 @@ const TRANSLATIONS = {
   },
   fr: {
     title:         'Nous utilisons des outils d\'analyse',
-    desc:          'Ce site utilise des outils d\'analyse tiers pour mesurer les visites et améliorer votre expérience de navigation. Les données collectées peuvent inclure des informations anonymes telles que les pages visitées, la source de provenance et le type d\'appareil. Aucun outil d\'analyse n\'est activé sans votre consentement explicite.',
+    desc:          'Ce site utilise des outils d\'analyse auto-hébergés et respectueux de la vie privée pour mesurer les visites et améliorer votre expérience de navigation. Les données collectées sont anonymes et agrégées : aucun cookie de profilage n\'est déposé, et aucun outil d\'analyse n\'est activé sans votre consentement explicite.',
     changeNote:    'Vous pouvez modifier vos préférences à tout moment en cliquant sur l\'icône 🍪 ci-dessous.',
     privacyLink:   'Politique de confidentialité',
     cookieLink:    'Politique de cookies',
@@ -79,7 +79,7 @@ const TRANSLATIONS = {
   },
   de: {
     title:         'Wir verwenden Analyse-Tools',
-    desc:          'Diese Website verwendet Analyse-Tools von Drittanbietern, um Besuche zu messen und die Nutzererfahrung zu verbessern. Erfasst werden können anonyme Informationen wie besuchte Seiten, Herkunftsquelle und Gerätetyp. Ohne deine ausdrückliche Zustimmung wird kein Analyse-Tool aktiviert.',
+    desc:          'Diese Website verwendet selbst gehostete, datenschutzfreundliche Analyse-Tools, um Besuche zu messen und die Nutzererfahrung zu verbessern. Die erfassten Daten sind anonym und aggregiert: Es werden keine Profiling-Cookies gesetzt, und ohne deine ausdrückliche Zustimmung wird kein Analyse-Tool aktiviert.',
     changeNote:    'Du kannst deine Einstellungen jederzeit über das 🍪-Symbol unten ändern.',
     privacyLink:   'Datenschutzerklärung',
     cookieLink:    'Cookie-Richtlinie',

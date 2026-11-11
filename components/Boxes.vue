@@ -65,17 +65,19 @@
     ...paddingClassMap,
     '-1': '-1', '-075': '-075', '-05': '-05', '-025': '-025', auto: 'auto'
   }
-  // Gap mapping
+  // Mirror mini's _flexboxes.scss $multiplier labels (the g-* classes)
   const gapClassMap = {
-    0:'0', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5',
-    '05': '05', 15: '15'
+    0:'0', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 10: '10', 20: '20',
+    '025': '025', '05': '05', '075': '075', 15: '15'
   }
 
   const boxesClass = computed(() => {
     const classes = ['boxes']
     
     // Gap
-    const gapClass = props.gap && gapClassMap[props.gap] ? 'g-'+gapClassMap[props.gap] : null
+    // No truthiness check on props.gap, so a numeric :gap="0" works too
+    // (same fix as padding and margin below).
+    const gapClass = gapClassMap[props.gap] ? 'g-'+gapClassMap[props.gap] : null
     classes.push(gapClass)
 
     if (props.space === true || props.spaceTopBot === true) {

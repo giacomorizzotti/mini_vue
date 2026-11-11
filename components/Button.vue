@@ -70,6 +70,7 @@ const colorClassMap = {
 
 // Size mapping
 const sizeClassMap = {
+  xxs: 'XXS', XXS: 'XXS', 'extra-extra-small': 'XXS',
   xs: 'XS', XS: 'XS', 'extra-small': 'XS',
   s: 'S', S: 'S', small: 'S',
   l: 'L', L: 'L', large: 'L',

@@ -27,6 +27,12 @@ const props = defineProps({
   // a French/German visitor should see English, not a language they may
   // not read at all.
   lang: { type: String, default: null },
+  // Where the policy's own cookie-policy link points, sent as the API's
+  // cookie_policy_url. Omitted, nothing is sent and the API keeps its
+  // /cookie-policy/ default. For a site whose cookie policy lives elsewhere,
+  // e.g. '/#/cookie-policy' with hash routing, or '/{lang}/cookie-policy'
+  // ({lang} becomes it or en).
+  cookiePolicyUrl: { type: String, default: null },
 })
 
 const { showMessage } = useMessage()
@@ -44,6 +50,7 @@ async function load() {
     url.searchParams.set('purposes', props.purposes)
     url.searchParams.set('hosting_region', 'eu')
     url.searchParams.set('lang', resolveApiLang())
+    if (props.cookiePolicyUrl) url.searchParams.set('cookie_policy_url', props.cookiePolicyUrl)
     const response = await fetch(url)
     privacyHtml.value = await response.text()
   } catch (error) {
