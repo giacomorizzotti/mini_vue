@@ -32,6 +32,7 @@ export { default as DropdownMenu } from './DropdownMenu.vue'
 export { default as PageMenu } from './PageMenu.vue'
 export { default as SubNavigation } from './SubNavigation.vue'
 export { default as Tabs } from './Tabs.vue'
+export { default as ThemeSwitch } from './ThemeSwitch.vue'
 export { default as Top } from './Top.vue'
 
 // UI Components

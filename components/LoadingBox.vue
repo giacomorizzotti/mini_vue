@@ -48,7 +48,7 @@ const heightStyle = typeof props.height === 'number' ? `${props.height}px` : pro
   height: 100%;
   z-index:1;
   border-radius: 10px;
-  background: white;
+  background: var(--white);
 }
 
 @keyframes shimmer {

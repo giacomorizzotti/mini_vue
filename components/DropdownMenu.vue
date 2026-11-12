@@ -84,7 +84,7 @@ const toggleDropdown = () => {
   top: 100%;
   left: 0;
   min-width: 200px;
-  background: white;
+  background: var(--white);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   list-style: none;
   padding: 0.5rem 0;
