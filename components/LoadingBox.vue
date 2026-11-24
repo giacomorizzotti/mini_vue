@@ -10,6 +10,12 @@ const props = defineProps({
 		type: [Number, String],
 		default: 100
 	},
+	// For a black page or a dark card (.black-bg, .false-black-bg). In dark mode those turn
+	// light, and so does this, like them.
+	dark: {
+		type: Boolean,
+		default: false
+	},
 })
 
 const heightStyle = typeof props.height === 'number' ? `${props.height}px` : props.height
@@ -17,7 +23,7 @@ const heightStyle = typeof props.height === 'number' ? `${props.height}px` : pro
 
 <template>
   <Box :size="props.size" padding="0" :style="{ height: heightStyle }" class="relative">
-	<div class="loading-box b-rad-10"></div>
+	<div class="loading-box b-rad-10" :class="{ dark: props.dark }"></div>
   </Box>
 </template>
 
@@ -49,6 +55,17 @@ const heightStyle = typeof props.height === 'number' ? `${props.height}px` : pro
   z-index:1;
   border-radius: 10px;
   background: var(--white);
+}
+
+// The dark version (the `dark` prop): the same box from the other end of the neutral scale,
+// --black on a --false-black glow. --main-color-transp, a faint dark tint, doesn't show on
+// black, so the sweep is the main color itself, at half strength.
+.loading-box.dark:before {
+  background-image: linear-gradient(45deg, var(--false-black) 25%, var(--main-color) 50%, var(--false-black) 75%);
+  opacity: 0.5;
+}
+.loading-box.dark:after {
+  background: var(--black);
 }
 
 @keyframes shimmer {
